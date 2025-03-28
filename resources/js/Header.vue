@@ -1,0 +1,182 @@
+<template>
+    <div class="mb-6 border-b pb-4" v-if="planogram">
+        <!-- Modal para adicionar gôndola -->
+        <GondolaModal
+            :open="showGondolaModal"
+            :planogram-id="planogram.id"
+            @close="handleCloseGondolaModal"
+            @gondola-added="handleGondolaAdded"
+            @update:open="showGondolaModal = $event"
+        />
+
+        <!-- Modal para adicionar seção à gôndola -->
+        <GondolaSectionModal
+            v-if="selectedGondolaId"
+            :open="showSectionModal"
+            :gondola-id="selectedGondolaId"
+            @close="handleCloseSectionModal"
+            @section-added="handleSectionAdded"
+            @update:open="showSectionModal = $event"
+        />
+
+        <div class="flex items-center justify-between">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-2xl font-bold tracking-tight">{{ planogram.name }}</h2>
+                    <Badge :variant="getStatusVariant(planogram.status)">
+                        {{ planogram.status }}
+                    </Badge>
+                </div>
+                <p class="text-sm text-muted-foreground">ID: {{ planogram.id }} | Criado em: {{ formatDate(planogram.created_at) }}</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                    <PencilIcon class="mr-2 h-4 w-4" />
+                    Editar
+                </Button>
+                <Button size="sm">
+                    <SaveIcon class="mr-2 h-4 w-4" />
+                    Salvar
+                </Button>
+            </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Card>
+                <CardHeader class="pb-2">
+                    <CardTitle class="text-sm font-medium">Tenant</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="text-lg font-semibold">{{ planogram.tenant.name }}</div>
+                    <div class="text-sm text-muted-foreground">{{ planogram.tenant.email }}</div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader class="pb-2">
+                    <CardTitle class="text-sm font-medium">Detalhes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-muted-foreground">Slug:</span>
+                            <span class="text-sm font-medium">{{ planogram.slug }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-muted-foreground">Atualizado:</span>
+                            <span class="text-sm font-medium">{{ formatDate(planogram.updated_at) }}</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle class="text-sm font-medium">Gôndolas</CardTitle>
+                    <Button variant="ghost" size="sm" @click="openAddGondolaModal">
+                        <PlusIcon class="mr-2 h-4 w-4" />
+                        Adicionar
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="planogram.gondolas && planogram.gondolas.length > 0">
+                        <div v-for="gondola in planogram.gondolas" :key="gondola.id" class="flex items-center justify-between py-1">
+                            <span class="text-sm">{{ gondola.name }}</span>
+                            <Button variant="ghost" size="sm" @click="openAddSectionModal(gondola.id)">
+                                <GanttChartIcon class="mr-1 h-4 w-4" />
+                                Adicionar Seção
+                            </Button>
+                        </div>
+                    </div>
+                    <div v-else class="py-2 text-center text-sm text-gray-500">Nenhuma gôndola adicionada</div>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GanttChartIcon, PencilIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
+import { ref } from 'vue';
+import GondolaModal from './components/modal/gondola/Add.vue';
+import GondolaSectionModal from './components/modal/gondola/section/Add.vue';
+
+// Props para receber os dados do planograma do Inertia
+const props = defineProps({
+    planogram: {
+        type: Object,
+        required: true,
+    },
+});
+
+// Estado para controlar a visibilidade dos modais
+const showGondolaModal = ref(false);
+const showSectionModal = ref(false);
+const selectedGondolaId = ref(null);
+
+// Função para abrir o modal de adicionar gôndola
+const openAddGondolaModal = () => {
+    showGondolaModal.value = true;
+};
+
+// Função para fechar o modal de adicionar gôndola
+const handleCloseGondolaModal = () => {
+    showGondolaModal.value = false;
+};
+
+// Função para abrir o modal de adicionar seção à gôndola
+const openAddSectionModal = (gondolaId) => {
+    selectedGondolaId.value = gondolaId;
+    showSectionModal.value = true;
+};
+
+// Função para fechar o modal de adicionar seção à gôndola
+const handleCloseSectionModal = () => {
+    showSectionModal.value = false;
+    // Não limpe o selectedGondolaId aqui, só quando fechar o modal
+};
+
+// Função para lidar com o evento de gôndola adicionada
+const handleGondolaAdded = () => {
+    // Aqui você pode atualizar os dados do planograma ou recarregar a página
+    // Inertia.reload({ only: ['planogram'] });
+    window.location.reload(); // Solução temporária
+};
+
+// Função para lidar com o evento de seção adicionada
+const handleSectionAdded = () => {
+    // Aqui você pode atualizar os dados da gôndola ou recarregar a página
+    // Inertia.reload({ only: ['planogram'] });
+    window.location.reload(); // Solução temporária
+};
+
+// Função para formatar datas
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
+
+// Determina a variante de cor do badge com base no status
+const getStatusVariant = (status) => {
+    switch (status?.toLowerCase()) {
+        case 'published':
+            return 'success';
+        case 'draft':
+            return 'secondary';
+        default:
+            return 'default';
+    }
+};
+</script>

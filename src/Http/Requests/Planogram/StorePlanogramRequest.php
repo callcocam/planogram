@@ -4,9 +4,10 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace App\Http\Requests\Planogram;
- 
-use Callcocam\Raptor\Http\Requests\BaseFormRequest;
+namespace Callcocam\Planogram\Http\Requests\Planogram;
+  
+
+use Callcocam\Planogram\Http\Requests\BaseFormRequest;
 
 /**
  * Class StoreRequest
@@ -14,7 +15,7 @@ use Callcocam\Raptor\Http\Requests\BaseFormRequest;
  * Classe de validação para requisições de criação de registros Planogram.
  * Define regras de validação e mensagens personalizadas.
  */
-class StoreRequest extends BaseFormRequest
+class StorePlanogramRequest extends BaseFormRequest
 {
     /**
      * Determina se o usuário está autorizado a fazer esta requisição.

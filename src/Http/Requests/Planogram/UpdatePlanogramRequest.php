@@ -4,7 +4,7 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace App\Http\Requests\Planogram;
+namespace Callcocam\Planogram\Http\Requests\Planogram;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,7 +14,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * Classe de validação para requisições de atualização de registros Planogram.
  * Define regras de validação e mensagens personalizadas.
  */
-class UpdateRequest extends FormRequest
+class UpdatePlanogramRequest extends FormRequest
 {
     /**
      * Determina se o usuário está autorizado a fazer esta requisição.
@@ -40,6 +40,7 @@ class UpdateRequest extends FormRequest
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'sometimes|required|string',
+            'gondola' => 'sometimes|required|array',
             // Adicione mais regras de validação conforme necessário
         ];
     }

@@ -9,11 +9,10 @@ namespace Callcocam\Planogram\Models;
 use Callcocam\Planogram\Enums\PlanogramStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory; 
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Callcocam\Raptor\Models\AbstractModel;
+use Illuminate\Database\Eloquent\SoftDeletes; 
+use Illuminate\Database\Eloquent\Model;
 
-
-class Planogram extends AbstractModel
+class Planogram extends Model
 {
     use HasFactory, HasUlids, SoftDeletes; 
 
@@ -22,4 +21,14 @@ class Planogram extends AbstractModel
     protected $casts = [
         'status' => PlanogramStatus::class,
     ];
+
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class, 'planogram_store');
+    }
+
+    public function gondolas()
+    {
+        return $this->hasMany(Gondola::class);
+    }
 } 
