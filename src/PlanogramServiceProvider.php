@@ -4,13 +4,13 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace VendorName\Skeleton;
+namespace Callcocam\Planogram;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use VendorName\Skeleton\Commands\SkeletonCommand;
+use Callcocam\Planogram\Commands\PlanogramCommand;
 
-class SkeletonServiceProvider extends PackageServiceProvider
+class PlanogramServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
@@ -20,10 +20,10 @@ class SkeletonServiceProvider extends PackageServiceProvider
          * More info: https://github.com/spatie/laravel-package-tools
          */
         $package
-            ->name('skeleton')
+            ->name('planogram')
             ->hasConfigFile()
             ->hasViews()
-            ->hasMigration('create_migration_table_name_table')
-            ->hasCommand(SkeletonCommand::class);
+            ->hasMigration('create_planogram_table')
+            ->hasCommand(PlanogramCommand::class);
     }
 }

@@ -4,13 +4,13 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace VendorName\Skeleton\Commands;
+namespace Callcocam\Planogram\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class PlanogramCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'planogram';
 
     public $description = 'My command';
 

@@ -4,17 +4,17 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace VendorName\Skeleton\Facades;
+namespace Callcocam\Planogram\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \VendorName\Skeleton\Skeleton
+ * @see \Callcocam\Planogram\Planogram
  */
-class Skeleton extends Facade
+class Planogram extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \VendorName\Skeleton\Skeleton::class;
+        return \Callcocam\Planogram\Planogram::class;
     }
 }
