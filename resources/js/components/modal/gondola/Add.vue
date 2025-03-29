@@ -1,130 +1,80 @@
 <template>
     <Dialog :open="isOpen" @update:open="updateOpen">
-        <DialogContent class="max-w-2xl">
-            <DialogHeader>
-                <DialogTitle>Adicionar Nova Gôndola</DialogTitle>
-                <DialogDescription> Preencha os detalhes da gôndola para adicionar ao planograma. </DialogDescription>
-            </DialogHeader>
-
-            <form @submit.prevent="submitForm">
-                <div class="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
-                    <!-- Informações Básicas -->
-                    <div class="space-y-4 md:col-span-2">
-                        <h3 class="text-sm font-medium">Informações Básicas</h3>
-
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <Label for="name">Nome *</Label>
-                                <Input id="name" v-model="form.gondola.name" required />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="location">Localização</Label>
-                                <Input id="location" v-model="form.gondola.location" placeholder="Ex: Setor de bebidas" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dimensões Principais -->
-                    <div class="space-y-4 md:col-span-2">
-                        <h3 class="text-sm font-medium">Dimensões Principais</h3>
-
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div class="space-y-2">
-                                <Label for="height">Altura (cm)</Label>
-                                <Input id="height" type="number" v-model="form.gondola.height" min="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="width">Largura (cm)</Label>
-                                <Input id="width" type="number" v-model="form.gondola.width" min="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="thickness">Espessura (cm)</Label>
-                                <Input id="thickness" type="number" v-model="form.gondola.thickness" min="1" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detalhes Técnicos -->
-                    <div class="space-y-4 md:col-span-2">
-                        <h3 class="text-sm font-medium">Detalhes Técnicos</h3>
-
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div class="space-y-2">
-                                <Label for="base_height">Altura da Base (cm)</Label>
-                                <Input id="base_height" type="number" v-model="form.gondola.base_height" min="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="shelf_height">Altura da Prateleira (cm)</Label>
-                                <Input id="shelf_height" type="number" v-model="form.gondola.shelf_height" min="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="scale_factor">Fator de Escala</Label>
-                                <Input id="scale_factor" type="number" v-model="form.gondola.scale_factor" min="1" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detalhes dos Furos -->
-                    <div class="space-y-4 md:col-span-2">
-                        <h3 class="text-sm font-medium">Detalhes dos Furos</h3>
-
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <Label for="hole_spacing">Espaçamento entre Furos (cm)</Label>
-                                <Input id="hole_spacing" type="number" v-model="form.gondola.hole_spacing" min="1" />
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="hole_diameter">Diâmetro dos Furos (cm)</Label>
-                                <Input id="hole_diameter" type="number" v-model="form.gondola.hole_diameter" min="1" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="space-y-2 md:col-span-2">
-                        <Label for="status">Status</Label>
-                        <Select v-model="form.gondola.status">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione o status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel>Status</SelectLabel>
-                                    <SelectItem value="published">Publicado</SelectItem>
-                                    <SelectItem value="draft">Rascunho</SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
+        <DialogContent class="flex max-h-[90vh] w-full max-w-4xl flex-col p-0">
+            <!-- Cabeçalho Fixo -->
+            <div class="border-b p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <DialogTitle class="text-xl font-semibold">{{ passoTitulos[passoAtual] }}</DialogTitle>
+                        <DialogDescription>{{ passoDescricoes[passoAtual] }}</DialogDescription>
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button type="button" variant="outline" @click="closeModal">Cancelar</Button>
-                    <Button type="submit" :disabled="isSubmitting">
-                        <Loader2Icon v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
-                        Adicionar Gôndola
-                    </Button>
-                </DialogFooter>
-            </form>
+                <!-- Indicador de passos -->
+                <div class="mb-2 mt-3 flex items-center">
+                    <template v-for="(passo, index) in passoTitulos" :key="index">
+                        <div
+                            class="flex h-8 w-8 flex-none items-center justify-center rounded-full text-sm font-medium"
+                            :class="{
+                                'bg-black text-white': passoAtual > index,
+                                'bg-black text-white': passoAtual === index,
+                                'bg-gray-200 text-gray-700': passoAtual < index,
+                            }"
+                        >
+                            <CheckIcon v-if="passoAtual > index" class="h-4 w-4" />
+                            <span v-else>{{ index + 1 }}</span>
+                        </div>
+                        <div
+                            v-if="index < passoTitulos.length - 1"
+                            class="mx-2 h-1 flex-1"
+                            :class="{ 'bg-black': passoAtual > index, 'bg-gray-300': passoAtual <= index }"
+                        ></div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Área de Conteúdo com Rolagem -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <!-- Componentes de cada passo -->
+                <StepGondola v-if="passoAtual === 0" :form-data="formData" @update:form="updateForm" />
+
+                <StepDimensions v-if="passoAtual === 1" :form-data="formData" @update:form="updateForm" />
+
+                <StepShelfs v-if="passoAtual === 2" :form-data="formData" @update:form="updateForm" />
+
+                <StepReview v-if="passoAtual === 3" :form-data="formData" />
+            </div>
+
+            <!-- Rodapé Fixo -->
+            <div class="flex justify-between border-t bg-white p-4">
+                <Button v-if="passoAtual > 0" variant="outline" @click="passoAtual--"> <ChevronLeftIcon class="mr-2 h-4 w-4" /> Anterior </Button>
+                <div v-else>
+                    <Button variant="outline" @click="fecharModal">Cancelar</Button>
+                </div>
+
+                <Button v-if="passoAtual < passoTitulos.length - 1" @click="passoAtual++"> Próximo <ChevronRightIcon class="ml-2 h-4 w-4" /> </Button>
+                <Button v-else @click="enviarFormulario" :disabled="enviando">
+                    <SaveIcon v-if="!enviando" class="mr-2 h-4 w-4" />
+                    <Loader2Icon v-else class="mr-2 h-4 w-4 animate-spin" />
+                    Salvar
+                </Button>
+            </div>
         </DialogContent>
     </Dialog>
 </template>
 
 <script setup>
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/vue3';
-import { Loader2Icon } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, SaveIcon } from 'lucide-vue-next';
+import { reactive, ref, watch } from 'vue';
+
+// Importação dos componentes de passos
+import StepDimensions from './StepDimensions.vue';
+import StepGondola from './StepGondola.vue';
+import StepShelfs from './StepShelfs.vue';
+import StepReview from './StepReview.vue';
 
 const props = defineProps({
     open: {
@@ -140,7 +90,48 @@ const props = defineProps({
 const emit = defineEmits(['close', 'gondola-added', 'update:open']);
 
 const isOpen = ref(props.open);
-const isSubmitting = ref(false);
+const enviando = ref(false);
+const passoAtual = ref(0);
+
+// Títulos e descrições para cada passo
+const passoTitulos = ['Informações Básicas', 'Dimensões', 'Prateleiras', 'Revisão'];
+
+const passoDescricoes = [
+    'Preencha as informações básicas da gôndola',
+    'Configure as dimensões e especificações técnicas',
+    'Configure as prateleiras e seções',
+    'Revise todas as informações antes de salvar',
+];
+
+// Formulário unificado com todos os campos necessários
+const formData = reactive({
+    // Informações básicas (Passo 1)
+    planogram_id: props.planogramId,
+    name: '', // Será preenchido com código gerado automaticamente no componente StepGondola
+    location: 'Centro de Distribuição',
+    status: 'published',
+    scale_factor: 3,
+
+    // Dimensões (Passo 2)
+    width: 130,
+    height: 180,
+    thickness: 4,
+    base_height: 17,
+    depth: 40,
+
+    // Prateleiras e seções (Passo 3)
+    shelf_height: 4,
+    shelf_qty: 5,
+    hole_spacing: 2,
+    hole_diameter: 2,
+    num_modulos: 4,
+    tipo_produto: 'normal',
+    position: 0,
+    section_width: 130, // Largura específica da seção (pode ser diferente da gôndola)
+});
+
+// Formulário do Inertia.js para envio
+const form = useForm({});
 
 // Watch para sincronizar a propriedade open com o estado interno
 watch(
@@ -150,25 +141,18 @@ watch(
     },
 );
 
-// Formulário com valores padrão
-const formDefaults = {
-    gondola: {
-        planogram_id: props.planogramId,
-        name: '',
-        location: 'Centro de Distribuição',
-        height: 180, // Valor padrão: 200cm
-        width: 130, // Valor padrão: 100cm
-        thickness: 4, // Padrão da migration
-        base_height: 17, // Padrão da migration
-        shelf_height: 4, // Padrão da migration
-        hole_spacing: 2, // Padrão da migration
-        hole_diameter: 2, // Padrão da migration
-        scale_factor: 3, // Padrão da migration
-        status: 'published', // Status padrão
+// Watch para sincronizar o planogramId
+watch(
+    () => props.planogramId,
+    (newVal) => {
+        formData.planogram_id = newVal;
     },
-};
+);
 
-const form = useForm({ ...formDefaults });
+// Função para atualizar dados do formulário
+const updateForm = (newData) => {
+    Object.assign(formData, newData);
+};
 
 // Função para atualizar o estado do modal e emitir evento
 const updateOpen = (value) => {
@@ -177,28 +161,79 @@ const updateOpen = (value) => {
 
     if (!value) {
         emit('close');
-        resetForm();
+        resetarFormulario();
     }
 };
 
 // Função para fechar o modal
-const closeModal = () => {
+const fecharModal = () => {
     updateOpen(false);
 };
 
 // Função para resetar o formulário
-const resetForm = () => {
+const resetarFormulario = () => {
+    passoAtual.value = 0;
+
+    // Resetar formulário
+    Object.assign(formData, {
+        planogram_id: props.planogramId,
+        name: '',
+        location: 'Centro de Distribuição',
+        status: 'published',
+        scale_factor: 3,
+        width: 130,
+        height: 180,
+        thickness: 4,
+        base_height: 17,
+        depth: 40,
+        shelf_height: 4,
+        shelf_qty: 5,
+        hole_spacing: 2,
+        hole_diameter: 2,
+        num_modulos: 4,
+        tipo_produto: 'normal',
+        position: 0,
+        section_width: 130,
+    });
+
     form.reset();
     form.clearErrors();
-    Object.keys(formDefaults).forEach((key) => {
-        form[key] = formDefaults[key];
-    });
 };
 
-// Função para submeter o formulário
-const submitForm = () => {
-    isSubmitting.value = true;
+// Função para enviar o formulário
+const enviarFormulario = () => {
+    enviando.value = true;
 
+    // Preparar os dados para envio em formato compatível com o backend
+    const dadosEnvio = {
+        // Dados da gôndola
+        planogram_id: formData.planogram_id,
+        name: formData.name,
+        location: formData.location,
+        height: formData.height,
+        width: formData.width,
+        thickness: formData.thickness,
+        base_height: formData.base_height,
+        hole_spacing: formData.hole_spacing,
+        hole_diameter: formData.hole_diameter,
+        shelf_height: formData.shelf_height,
+        scale_factor: formData.scale_factor,
+        status: formData.status,
+
+        // Dados da seção
+        section: {
+            width: formData.section_width,
+            depth: formData.depth,
+            shelf_qty: formData.shelf_qty,
+            tipo_produto: formData.tipo_produto,
+            num_modulos: formData.num_modulos,
+        },
+    };
+
+    // Atualizar o formulário do Inertia
+    Object.assign(form, dadosEnvio);
+
+    // Enviar os dados
     form.put(
         route('planogram.planogram.update', {
             planogram: props.planogramId,
@@ -207,16 +242,11 @@ const submitForm = () => {
             preserveScroll: true,
             onSuccess: () => {
                 emit('gondola-added');
-                closeModal();
-                // Exibir mensagem de sucesso
-                // toast({
-                //     title: 'Gôndola adicionada',
-                //     description: 'A gôndola foi adicionada com sucesso ao planograma.',
-                //     variant: 'success',
-                // });
+                fecharModal();
+                // Exibir mensagem de sucesso se necessário
             },
             onFinish: () => {
-                isSubmitting.value = false;
+                enviando.value = false;
             },
         },
     );

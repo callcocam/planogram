@@ -9,16 +9,7 @@
             @update:open="showGondolaModal = $event"
         />
 
-        <!-- Modal para adicionar seção à gôndola -->
-        <GondolaSectionModal
-            v-if="selectedGondolaId"
-            :open="showSectionModal"
-            :gondola-id="selectedGondolaId"
-            @close="handleCloseSectionModal"
-            @section-added="handleSectionAdded"
-            @update:open="showSectionModal = $event"
-        />
-
+     
         <div class="flex items-center justify-between">
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
@@ -31,6 +22,10 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <Button variant="outline" size="sm" @click="openAddGondolaModal">
+                    <PlusCircleIcon class="mr-2 h-4 w-4" />
+                    Adicionar Gôndola
+                </Button>
                 <Button variant="outline" size="sm">
                     <PencilIcon class="mr-2 h-4 w-4" />
                     Editar
@@ -42,7 +37,7 @@
             </div>
         </div>
 
-        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <Card>
                 <CardHeader class="pb-2">
                     <CardTitle class="text-sm font-medium">Tenant</CardTitle>
@@ -71,7 +66,7 @@
                 </CardContent>
             </Card>
 
-            <Card>
+            <!-- <Card>
                 <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle class="text-sm font-medium">Gôndolas</CardTitle>
                     <Button variant="ghost" size="sm" @click="openAddGondolaModal">
@@ -91,7 +86,7 @@
                     </div>
                     <div v-else class="py-2 text-center text-sm text-gray-500">Nenhuma gôndola adicionada</div>
                 </CardContent>
-            </Card>
+            </Card> -->
         </div>
     </div>
 </template>
@@ -100,10 +95,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GanttChartIcon, PencilIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
+import { GanttChartIcon, PencilIcon, PlusCircleIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
 import { ref } from 'vue';
 import GondolaModal from './components/modal/gondola/Add.vue';
-import GondolaSectionModal from './components/modal/gondola/section/Add.vue';
 
 // Props para receber os dados do planograma do Inertia
 const props = defineProps({
@@ -115,8 +109,6 @@ const props = defineProps({
 
 // Estado para controlar a visibilidade dos modais
 const showGondolaModal = ref(false);
-const showSectionModal = ref(false);
-const selectedGondolaId = ref(null);
 
 // Função para abrir o modal de adicionar gôndola
 const openAddGondolaModal = () => {
@@ -128,17 +120,6 @@ const handleCloseGondolaModal = () => {
     showGondolaModal.value = false;
 };
 
-// Função para abrir o modal de adicionar seção à gôndola
-const openAddSectionModal = (gondolaId) => {
-    selectedGondolaId.value = gondolaId;
-    showSectionModal.value = true;
-};
-
-// Função para fechar o modal de adicionar seção à gôndola
-const handleCloseSectionModal = () => {
-    showSectionModal.value = false;
-    // Não limpe o selectedGondolaId aqui, só quando fechar o modal
-};
 
 // Função para lidar com o evento de gôndola adicionada
 const handleGondolaAdded = () => {
@@ -147,12 +128,6 @@ const handleGondolaAdded = () => {
     window.location.reload(); // Solução temporária
 };
 
-// Função para lidar com o evento de seção adicionada
-const handleSectionAdded = () => {
-    // Aqui você pode atualizar os dados da gôndola ou recarregar a página
-    // Inertia.reload({ only: ['planogram'] });
-    window.location.reload(); // Solução temporária
-};
 
 // Função para formatar datas
 const formatDate = (dateString) => {
