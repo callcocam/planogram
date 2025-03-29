@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignUlid('user_id')->nullable()->index();
             $table->foreignUlid('shelf_id')->constrained()->cascadeOnDelete();
             $table->integer('width')->nullable();  // Largura em centímetros
+            $table->integer('height')->nullable(); // Altura em centímetros
             $table->integer('ordering')->default(0)->nullable(); // Ordem de exibição/posição
             $table->integer('position')->nullable(); // Posição vertical em centímetros
             $table->integer('quantity')->default(1)->nullable(); // Quantidade de camadas

@@ -31,6 +31,7 @@ class Section extends Model
         'name',
         'slug',
         'width', // largura da seção
+        'height', // altura da seção
         'ordering', // ordem da seção
         'status', // status da seção
         'shelf_height', // altura das prateleiras
@@ -40,6 +41,7 @@ class Section extends Model
     protected $casts = [
         'height' => 'integer',
         'width' => 'integer',
+        'height' => 'integer',
         'position' => 'integer',
         'status' => SectionStatus::class,
     ];

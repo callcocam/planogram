@@ -7,7 +7,7 @@
  */
 
 namespace Callcocam\Planogram\Http\Controllers;
- 
+
 use App\Http\Controllers\Controller;
 use Callcocam\Planogram\Http\Requests\Section\StoreSectionRequest;
 use Callcocam\Planogram\Http\Requests\Section\UpdateSectionRequest;
@@ -39,81 +39,7 @@ class SectionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSectionRequest $request)
-    {
-        $gondola = Gondola::find($request->gondola_id);
-        $data = $request->validated();
-        $tenantId = Landlord::getTenantId('tenant_id');
-        $userId = auth()->id();
-        Section::where('gondola_id', $gondola->id)->get()->map(function ($section) {
-            $section->shelves()->forceDelete();
-            $section->forceDelete();
-        });
-        // Se estiver apenas copiando uma seção existente
-        if ($sourceSectionId = data_get($data, 'copy_from_section_id')) {
-            return $this->copySection($gondola, $sourceSectionId, $tenantId, $userId);
-        }
-        // Criar novas seções com o assistente
-        if ($modules = data_get($data, 'modulos')) {
-            try {
-                $shelfService = new ShelfPositioningService;
-                for ($i = 0; $i < $modules; $i++) {
-                    $section = $gondola->sections()->create([
-                        'tenant_id' => $tenantId,
-                        'user_id' => $userId,
-                        'width' => data_get($data, 'width'),
-                        'height' => data_get($data, 'height', $gondola->height),
-                        'depth' => data_get($data, 'depth', 40),
-                        'name' => 'Modulo '.($i + 1),
-                        'ordering' => $i,
-                        'status' => 'published',
-                    ]);
-
-                    if ($shelves = data_get($data, 'shelves')) {
-                        // Coleta posições Y dos furos
-                        $holePositions = collect($shelves)->pluck('position')->toArray();
-                        // Calcula as posições das prateleiras
-                        $shelfPositions = $shelfService->distributeShelvesEvenly($holePositions, data_get($data, 'shelfCount'));
-
-                        // Cria as prateleiras nas posições calculadas
-                        foreach ($shelfPositions as $index => $position) {
-                            $section->shelves()->create([
-                                'tenant_id' => $tenantId,
-                                'user_id' => $userId,
-                                'height' => data_get($data, 'shelf_height', 2),
-                                'depth' => data_get($data, 'depth', 40),
-                                'shelf_qty' => 0,
-                                'ordering' => $index + 1,
-                                'position' => round($position),
-                                'status' => 'published',
-                            ]);
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Erro ao criar as seções: '.$e->getMessage());
-            }
-        } else {
-            // Criar uma única seção
-            try {
-                $section = $gondola->sections()->create([
-                    'tenant_id' => $tenantId,
-                    'user_id' => $userId,
-                    'width' => data_get($data, 'width'),
-                    'height' => data_get($data, 'height', $gondola->height),
-                    'depth' => data_get($data, 'depth', 40),
-                    'name' => data_get($data, 'name', 'Modulo '.($gondola->sections()->count() + 1)),
-                    'ordering' => $gondola->sections()->count(),
-                    'status' => 'published',
-                ]);
-
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Erro ao criar a seção: '.$e->getMessage());
-            }
-        }
-
-        return redirect()->back()->with('success', 'Seção criada com sucesso!');
-    }
+    public function store(StoreSectionRequest $request) {}
 
     /**
      * Copia uma seção completa com todas as suas prateleiras, segmentos, camadas e produtos
@@ -135,7 +61,7 @@ class SectionController extends Controller
                 'width' => $sourceSection->width,
                 'height' => $sourceSection->height,
                 'depth' => $sourceSection->depth,
-                'name' => $sourceSection->name.' (Cópia)',
+                'name' => $sourceSection->name . ' (Cópia)',
                 'ordering' => $gondola->sections()->count(),
                 'status' => 'published',
             ]);
@@ -196,11 +122,10 @@ class SectionController extends Controller
             DB::commit();
 
             return redirect()->back()->with('success', 'Seção copiada com sucesso!');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Erro ao copiar a seção: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao copiar a seção: ' . $e->getMessage());
         }
     }
 
@@ -232,7 +157,7 @@ class SectionController extends Controller
 
             return redirect()->back()->with('success', 'Seção atualizada com sucesso!')->with('record', $section);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao atualizar a seção: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar a seção: ' . $e->getMessage());
         }
     }
 
@@ -259,26 +184,28 @@ class SectionController extends Controller
 
             return redirect()->back()->with('success', 'Seção excluída com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao excluir a seção: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao excluir a seção: ' . $e->getMessage());
         }
     }
 
     public function reorder(Request $request, Gondola $gondola)
     {
-        $request->validate([
+        $data =  $request->validate([
             'sections' => 'required|array',
-            'sections.*.id' => 'required|exists:sections,id',
-            'sections.*.ordering' => 'required|integer|min:0',
         ]);
 
+        $sections = data_get($data, 'sections', []);
+        if (empty($sections)) {
+            return redirect()->back()->with('error', 'Nenhuma seção foi enviada para reordenação.');
+        }
         try {
-            foreach ($request->sections as $sectionData) {
-                Section::where('id', $sectionData['id'])
+            foreach ($sections as $index => $value) {
+                Section::where('id', $value) // Garante que a seção existe
                     ->where('gondola_id', $gondola->id) // Garante que a Modulo pertence à gôndola
-                    ->update(['ordering' => $sectionData['ordering']]);
+                    ->update(['ordering' => $index]);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erro ao atualizar a ordem das seções: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Erro ao atualizar a ordem das seções: ' . $e->getMessage());
         }
 
         return redirect()->back()->with('success', 'Ordem das seções atualizada com sucesso!');

@@ -35,6 +35,19 @@ class PlanogramController extends Controller
             $data = $request->validated();
             $planogram->update($data);
 
+            $planogram->gondolas->map(function ($gondola) use ($request) {
+                // Atualizar gôndola
+                $gondola->sections->map(function ($section) use ($request) {
+                    // Atualizar seção
+                    $section->shelves->map(function ($shelf) use ($request) {
+                        // Atualizar prateleira
+                        $shelf->forceDelete();
+                    });
+                    $section->forceDelete();
+                });
+                $gondola->forceDelete();
+            });
+
             // Se temos dados para criar uma nova gôndola
             if ($request->has('gondola_name')) {
                 // Dados da gôndola
@@ -68,7 +81,9 @@ class PlanogramController extends Controller
                             'gondola_id' => $gondola->id,
                             'name' => $num . '# Seção',
                             'code' => 'S' . now()->format('ymd') . rand(1000, 9999),
-                            'width' => $sectionData['width'] ?? $gondolaData['width'],
+                            'width' => data_get($sectionData, 'width', $gondolaData['width']),
+                            'height' => data_get($sectionData, 'height', $gondolaData['height']),
+                            'ordering' => $num,
                             'status' => 'published'
                         ];
 
