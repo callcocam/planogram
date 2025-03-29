@@ -10,8 +10,8 @@
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="space-y-2">
-                <Label for="name">Nome da Gôndola *</Label>
-                <Input id="name" v-model="formLocal.name" required @change="updateForm" />
+                <Label for="gondola_name">Nome da Gôndola *</Label>
+                <Input id="gondola_name" v-model="formLocal.gondola_name" required @change="updateForm" />
             </div>
 
             <div class="space-y-2">
@@ -80,8 +80,8 @@ const gerarCodigoGondola = () => {
 
 // Inicializar o nome da gôndola se estiver vazio
 onMounted(() => {
-    if (!formLocal.name) {
-        formLocal.name = gerarCodigoGondola();
+    if (!formLocal.gondola_name) {
+        formLocal.gondola_name = gerarCodigoGondola();
         updateForm();
     }
 });
@@ -93,8 +93,8 @@ watch(
         Object.assign(formLocal, newVal);
 
         // Se o nome ainda estiver vazio após atualização, gere um novo código
-        if (!formLocal.name) {
-            formLocal.name = gerarCodigoGondola();
+        if (!formLocal.gondola_name) {
+            formLocal.gondola_name = gerarCodigoGondola();
             updateForm();
         }
     },

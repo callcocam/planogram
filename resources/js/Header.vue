@@ -4,12 +4,12 @@
         <GondolaModal
             :open="showGondolaModal"
             :planogram-id="planogram.id"
+            :planogram="planogram"
             @close="handleCloseGondolaModal"
             @gondola-added="handleGondolaAdded"
             @update:open="showGondolaModal = $event"
         />
 
-     
         <div class="flex items-center justify-between">
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
@@ -65,28 +65,6 @@
                     </div>
                 </CardContent>
             </Card>
-
-            <!-- <Card>
-                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle class="text-sm font-medium">Gôndolas</CardTitle>
-                    <Button variant="ghost" size="sm" @click="openAddGondolaModal">
-                        <PlusIcon class="mr-2 h-4 w-4" />
-                        Adicionar
-                    </Button>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="planogram.gondolas && planogram.gondolas.length > 0">
-                        <div v-for="gondola in planogram.gondolas" :key="gondola.id" class="flex items-center justify-between py-1">
-                            <span class="text-sm">{{ gondola.name }}</span>
-                            <Button variant="ghost" size="sm" @click="openAddSectionModal(gondola.id)">
-                                <GanttChartIcon class="mr-1 h-4 w-4" />
-                                Adicionar Seção
-                            </Button>
-                        </div>
-                    </div>
-                    <div v-else class="py-2 text-center text-sm text-gray-500">Nenhuma gôndola adicionada</div>
-                </CardContent>
-            </Card> -->
         </div>
     </div>
 </template>
@@ -95,8 +73,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GanttChartIcon, PencilIcon, PlusCircleIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { PencilIcon, PlusCircleIcon, SaveIcon } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 import GondolaModal from './components/modal/gondola/Add.vue';
 
 // Props para receber os dados do planograma do Inertia
@@ -105,7 +83,21 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    showGondolaModalProp: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+// Emitir eventos para o componente pai
+const emit = defineEmits(['close', 'gondola-added']);
+
+watch(
+    () => props.showGondolaModalProp,
+    (newValue) => {
+        showGondolaModal.value = newValue;
+    },
+);
 
 // Estado para controlar a visibilidade dos modais
 const showGondolaModal = ref(false);
@@ -118,16 +110,16 @@ const openAddGondolaModal = () => {
 // Função para fechar o modal de adicionar gôndola
 const handleCloseGondolaModal = () => {
     showGondolaModal.value = false;
+    // Emitir evento para o componente pai
+    emit('close');
 };
-
 
 // Função para lidar com o evento de gôndola adicionada
 const handleGondolaAdded = () => {
     // Aqui você pode atualizar os dados do planograma ou recarregar a página
     // Inertia.reload({ only: ['planogram'] });
-    window.location.reload(); // Solução temporária
+    // window.location.reload(); // Solução temporária
 };
-
 
 // Função para formatar datas
 const formatDate = (dateString) => {

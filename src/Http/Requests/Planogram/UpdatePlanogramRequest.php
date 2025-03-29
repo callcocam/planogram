@@ -36,8 +36,33 @@ class UpdatePlanogramRequest extends FormRequest
      */
     public function rules(): array
     {
+// base_height
+// height
+// hole_diameter
+// hole_spacing
+// location
+// name
+// planogram_id
+// scale_factor
+// section
+// shelf_height
+// status
+// thickness
+// width
         return [
             'name' => 'sometimes|required|string|max:255',
+            'gondola_name' => 'sometimes|required|string|max:255',
+            'base_height' => 'sometimes|required|numeric',
+            'height' => 'sometimes|required|numeric',
+            'hole_diameter' => 'sometimes|required|numeric',
+            'hole_spacing' => 'sometimes|required|numeric',
+            'location' => 'sometimes|required|string|max:255',
+            'planogram_id' => 'sometimes|required|string|exists:planograms,id',
+            'scale_factor' => 'sometimes|required|numeric',
+            'section' => 'sometimes|required|array',
+            'shelf_height' => 'sometimes|required|numeric',
+            'thickness' => 'sometimes|required|numeric',
+            'width' => 'sometimes|required|numeric', 
             'description' => 'nullable|string',
             'status' => 'sometimes|required|string',
             'gondola' => 'sometimes|required|array',

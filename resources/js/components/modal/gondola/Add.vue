@@ -40,7 +40,7 @@
 
                 <StepDimensions v-if="passoAtual === 1" :form-data="formData" @update:form="updateForm" />
 
-                <StepShelfs v-if="passoAtual === 2" :form-data="formData" @update:form="updateForm" />
+                <StepShelves v-if="passoAtual === 2" :form-data="formData" @update:form="updateForm" />
 
                 <StepReview v-if="passoAtual === 3" :form-data="formData" />
             </div>
@@ -73,13 +73,17 @@ import { reactive, ref, watch } from 'vue';
 // Importação dos componentes de passos
 import StepDimensions from './StepDimensions.vue';
 import StepGondola from './StepGondola.vue';
-import StepShelfs from './StepShelfs.vue';
+import StepShelves from './StepShelves.vue';
 import StepReview from './StepReview.vue';
 
 const props = defineProps({
     open: {
         type: Boolean,
         default: false,
+    },
+    planogram: {
+        type: Object,
+        required: true,
     },
     planogramId: {
         type: String,
@@ -107,7 +111,8 @@ const passoDescricoes = [
 const formData = reactive({
     // Informações básicas (Passo 1)
     planogram_id: props.planogramId,
-    name: '', // Será preenchido com código gerado automaticamente no componente StepGondola
+    name: props.planogram.name, // Será preenchido com código gerado automaticamente no componente StepGondola
+    gondola_name: '',
     location: 'Centro de Distribuição',
     status: 'published',
     scale_factor: 3,
@@ -131,7 +136,7 @@ const formData = reactive({
 });
 
 // Formulário do Inertia.js para envio
-const form = useForm({});
+let form = useForm({});
 
 // Watch para sincronizar a propriedade open com o estado interno
 watch(
@@ -176,8 +181,8 @@ const resetarFormulario = () => {
 
     // Resetar formulário
     Object.assign(formData, {
-        planogram_id: props.planogramId,
-        name: '',
+        planogram_id: props.planogramId, 
+        gondola_name: '',
         location: 'Centro de Distribuição',
         status: 'published',
         scale_factor: 3,
@@ -208,7 +213,7 @@ const enviarFormulario = () => {
     const dadosEnvio = {
         // Dados da gôndola
         planogram_id: formData.planogram_id,
-        name: formData.name,
+        gondola_name: formData.name,
         location: formData.location,
         height: formData.height,
         width: formData.width,
@@ -218,6 +223,8 @@ const enviarFormulario = () => {
         hole_diameter: formData.hole_diameter,
         shelf_height: formData.shelf_height,
         scale_factor: formData.scale_factor,
+        num_modulos: formData.num_modulos,
+        tipo_produto: formData.tipo_produto,
         status: formData.status,
 
         // Dados da seção
@@ -230,8 +237,11 @@ const enviarFormulario = () => {
         },
     };
 
-    // Atualizar o formulário do Inertia
-    Object.assign(form, dadosEnvio);
+    console.log('Dados a serem enviados:', dadosEnvio);
+
+    // Importante: Recrie o formulário com os dados em vez de usar Object.assign
+    // O Object.assign pode não estar funcionando corretamente com o Inertia.js
+    form = useForm(dadosEnvio);
 
     // Enviar os dados
     form.put(
@@ -240,10 +250,23 @@ const enviarFormulario = () => {
         }),
         {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
                 emit('gondola-added');
                 fecharModal();
-                // Exibir mensagem de sucesso se necessário
+
+                // Exibir mensagem de sucesso
+                if (page.props.flash.success) {
+                    // Se você estiver usando o pacote toast, pode usar:
+                    // toast({
+                    //     title: 'Sucesso',
+                    //     description: page.props.flash.success,
+                    //     variant: 'success',
+                    // });
+                    console.log('Sucesso:', page.props.flash.success);
+                }
+            },
+            onError: (errors) => {
+                console.error('Erros:', errors);
             },
             onFinish: () => {
                 enviando.value = false;
