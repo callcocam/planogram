@@ -7,7 +7,7 @@
  */
 
 namespace Callcocam\Planogram\Models;
- 
+
 use App\Models\User;
 use Callcocam\Planogram\Enums\SectionStatus;
 use Callcocam\Raptor\Core\Concerns\Sluggable\HasSlug;
@@ -29,24 +29,39 @@ class Section extends Model
         'user_id',
         'gondola_id',
         'name',
+        'code',
         'slug',
-        'width', // largura da seção
-        'height', // altura da seção
-        'ordering', // ordem da seção
-        'status', // status da seção
-        'shelf_height', // altura das prateleiras
-        'hole_spacing', // distância entre os furos da prateleira
+        'width',
+        'height',
+        'num_shelves',
+        'base_height',
+        'base_depth',
+        'base_width',
+        'cremalheira_width',
+        'hole_height',
+        'hole_width',
+        'hole_spacing',
+        'ordering',
+        'settings',
+        'status',
     ];
 
     protected $casts = [
-        'height' => 'integer',
         'width' => 'integer',
         'height' => 'integer',
-        'position' => 'integer',
+        'num_shelves' => 'integer',
+        'base_height' => 'integer',
+        'base_depth' => 'integer',
+        'base_width' => 'integer',
+        'cremalheira_width' => 'integer',
+        'hole_height' => 'integer',
+        'hole_width' => 'integer',
+        'hole_spacing' => 'integer',
+        'ordering' => 'integer',
+        'settings' => 'json',
         'status' => SectionStatus::class,
     ];
-
-    protected $appends = ['height'];
+ 
 
     public function gondola(): BelongsTo
     {
@@ -57,12 +72,7 @@ class Section extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function getHeightAttribute(): float
-    {
-        return $this->gondola->height;
-    }
-
+ 
     public function shelves(): HasMany
     {
         return $this->hasMany(Shelf::class)->orderBy('ordering');

@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified', 'web'])
 
         Route::prefix('sections/{gondola}')->group(function () {
             Route::put('reorder', [\Callcocam\Planogram\Http\Controllers\SectionController::class, 'reorder'])->name('sections.reorder');
+            Route::put('updateInvertOrder', [\Callcocam\Planogram\Http\Controllers\SectionController::class, 'updateInvertOrder'])->name('sections.updateInvertOrder');
         });
 
         Route::put('/gondolas/{gondola}/scale-factor', [\Callcocam\Planogram\Http\Controllers\GondolaController::class, 'updateScaleFactor'])->name('gondolas.updateScaleFactor');

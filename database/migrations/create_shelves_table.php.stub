@@ -17,12 +17,15 @@ return new class extends Migration
             $table->ulid('tenant_id')->nullable();
             $table->foreignUlid('user_id')->nullable()->index();
             $table->foreignUlid('section_id')->constrained()->cascadeOnDelete();
-            $table->string('code', 50)->unique()->nullable();
-            $table->integer('height')->nullable();  // Altura em centímetros
-            $table->integer('depth')->nullable();  // Profundidade em centímetros
-            $table->integer('shelf_qty')->default(1)->nullable(); // Quantidade de prateleiras
+            $table->string('code', 50)->unique()->nullable();       
+            $table->string('product_type')->nullable()->default('normal'); // Tipo de produto      
+            //Configurar prateleiras e Gancheiras
+            $table->integer('shelf_width')->default(4)->nullable(); // Largura da prateleira em centímetros
+            $table->integer('shelf_height')->default(4); // Altura da prateleira em centímetros
+            $table->integer('shelf_depth')->default(40)->nullable(); // Profundidade da prateleira em centímetros 
+            $table->integer('shelf_position')->default(0)->nullable(); // Posição vertical em centímetros
             $table->integer('ordering')->default(0)->nullable(); // Ordem de exibição/posição
-            $table->integer('position')->default(0)->nullable(); // Posição vertical em centímetros
+            $table->json('settings')->nullable(); // Configurações
             $table->enum('status', array_column(ShelfStatus::cases(), 'value'))
             ->default(ShelfStatus::DRAFT->value);
             $table->timestamps();

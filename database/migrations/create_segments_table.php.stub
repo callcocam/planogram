@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('position')->nullable(); // Posição vertical em centímetros
             $table->integer('quantity')->default(1)->nullable(); // Quantidade de camadas
             $table->integer('spacing')->nullable(); // Espaçamento entre as camadas
+            $table->json('settings')->nullable(); // Configurações
             $table->enum('status', array_column(SegmentStatus::cases(), 'value'))
             ->default(SegmentStatus::DRAFT->value);
             $table->timestamps();

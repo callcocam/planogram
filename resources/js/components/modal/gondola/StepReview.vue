@@ -22,6 +22,10 @@
                                 <dt class="w-32 font-medium">Localização:</dt>
                                 <dd>{{ formData.location }}</dd>
                             </div>
+                            <div class="flex">
+                                <dt class="w-32 font-medium">Lado:</dt>
+                                <dd>{{ formData.side || 'Não especificado' }}</dd>
+                            </div>
                         </dl>
                     </div>
                     <div>
@@ -29,6 +33,10 @@
                             <div class="flex">
                                 <dt class="w-32 font-medium">Status:</dt>
                                 <dd>{{ formData.status === 'published' ? 'Publicado' : 'Rascunho' }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-32 font-medium">Fluxo:</dt>
+                                <dd>{{ formData.flow === 'left_to_right' ? 'Esquerda para direita' : 'Direita para esquerda' }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-32 font-medium">Fator de Escala:</dt>
@@ -39,41 +47,89 @@
                 </div>
             </div>
 
-            <!-- Dimensões -->
+            <!-- Módulos -->
             <div class="space-y-2">
-                <h4 class="border-b pb-1 font-medium">Dimensões</h4>
+                <h4 class="border-b pb-1 font-medium">Módulos</h4>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <div class="mb-2 text-sm font-medium text-gray-700">Gôndola</div>
                         <dl class="space-y-1">
                             <div class="flex">
-                                <dt class="w-32 font-medium">Altura:</dt>
-                                <dd>{{ formData.height }}cm</dd>
+                                <dt class="w-32 font-medium">Nº de Módulos:</dt>
+                                <dd>{{ formData.num_modulos }}</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-32 font-medium">Largura:</dt>
-                                <dd>{{ formData.width }}cm</dd>
+                                <dd>{{ formData.section_width }}cm</dd>
                             </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <dl class="space-y-1">
                             <div class="flex">
-                                <dt class="w-32 font-medium">Espessura:</dt>
-                                <dd>{{ formData.thickness }}cm</dd>
+                                <dt class="w-32 font-medium">Código da Seção:</dt>
+                                <dd>{{ formData.section_code || 'Automático' }}</dd>
                             </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base -->
+            <div class="space-y-2">
+                <h4 class="border-b pb-1 font-medium">Base</h4>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                        <dl class="space-y-1">
                             <div class="flex">
-                                <dt class="w-32 font-medium">Altura da Base:</dt>
+                                <dt class="w-32 font-medium">Altura:</dt>
                                 <dd>{{ formData.base_height }}cm</dd>
                             </div>
                         </dl>
                     </div>
                     <div>
-                        <div class="mb-2 text-sm font-medium text-gray-700">Seção</div>
                         <dl class="space-y-1">
                             <div class="flex">
                                 <dt class="w-32 font-medium">Largura:</dt>
-                                <dd>{{ formData.section_width }}cm</dd>
+                                <dd>{{ formData.base_width }}cm</dd>
                             </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <dl class="space-y-1">
                             <div class="flex">
                                 <dt class="w-32 font-medium">Profundidade:</dt>
-                                <dd>{{ formData.depth }}cm</dd>
+                                <dd>{{ formData.base_depth }}cm</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cremalheira -->
+            <div class="space-y-2">
+                <h4 class="border-b pb-1 font-medium">Cremalheira</h4>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <dl class="space-y-1">
+                            <div class="flex">
+                                <dt class="w-48 font-medium">Largura da Cremalheira:</dt>
+                                <dd>{{ formData.cremalheira_width }}cm</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-48 font-medium">Altura do Furo:</dt>
+                                <dd>{{ formData.hole_height }}cm</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <dl class="space-y-1">
+                            <div class="flex">
+                                <dt class="w-48 font-medium">Largura do Furo:</dt>
+                                <dd>{{ formData.hole_width }}cm</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-48 font-medium">Espaçamento entre Furos:</dt>
+                                <dd>{{ formData.hole_spacing }}cm</dd>
                             </div>
                         </dl>
                     </div>
@@ -82,10 +138,14 @@
 
             <!-- Prateleiras -->
             <div class="space-y-2">
-                <h4 class="border-b pb-1 font-medium">Prateleiras e Módulos</h4>
+                <h4 class="border-b pb-1 font-medium">Prateleiras</h4>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <dl class="space-y-1">
+                            <div class="flex">
+                                <dt class="w-32 font-medium">Altura Total:</dt>
+                                <dd>{{ formData.height }}cm</dd>
+                            </div>
                             <div class="flex">
                                 <dt class="w-32 font-medium">Quantidade:</dt>
                                 <dd>{{ formData.shelf_qty }}</dd>
@@ -94,44 +154,21 @@
                                 <dt class="w-32 font-medium">Altura:</dt>
                                 <dd>{{ formData.shelf_height }}cm</dd>
                             </div>
-                            <div class="flex">
-                                <dt class="w-32 font-medium">Espaçamento:</dt>
-                                <dd>{{ calcularEspacamento() }}cm</dd>
-                            </div>
                         </dl>
                     </div>
                     <div>
                         <dl class="space-y-1">
                             <div class="flex">
-                                <dt class="w-32 font-medium">Nº de Módulos:</dt>
-                                <dd>{{ formData.num_modulos }}</dd>
+                                <dt class="w-32 font-medium">Largura:</dt>
+                                <dd>{{ formData.shelf_width }}cm</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-32 font-medium">Profundidade:</dt>
+                                <dd>{{ formData.shelf_depth }}cm</dd>
                             </div>
                             <div class="flex">
                                 <dt class="w-32 font-medium">Tipo de Produto:</dt>
                                 <dd>{{ formData.tipo_produto === 'normal' ? 'Normal' : 'Pendurável' }}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detalhes dos Furos -->
-            <div class="space-y-2">
-                <h4 class="border-b pb-1 font-medium">Detalhes dos Furos</h4>
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <dl class="space-y-1">
-                            <div class="flex">
-                                <dt class="w-48 font-medium">Espaçamento entre Furos:</dt>
-                                <dd>{{ formData.hole_spacing }}cm</dd>
-                            </div>
-                        </dl>
-                    </div>
-                    <div>
-                        <dl class="space-y-1">
-                            <div class="flex">
-                                <dt class="w-48 font-medium">Diâmetro dos Furos:</dt>
-                                <dd>{{ formData.hole_diameter }}cm</dd>
                             </div>
                         </dl>
                     </div>
@@ -171,7 +208,8 @@ const props = defineProps({
 // Função para calcular o espaçamento entre prateleiras
 const calcularEspacamento = () => {
     const alturaTotal = props.formData.height;
-    const alturaUtil = alturaTotal - props.formData.base_height;
+    const alturaBase = props.formData.base_height || 17; // Usar valor padrão se não estiver definido
+    const alturaUtil = alturaTotal - alturaBase;
     const espacamento = props.formData.shelf_qty > 1 ? (alturaUtil / (props.formData.shelf_qty - 1)).toFixed(1) : 0;
     return espacamento;
 };

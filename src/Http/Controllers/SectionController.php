@@ -188,6 +188,18 @@ class SectionController extends Controller
         }
     }
 
+    /**
+     * Duplica uma seção existente
+     */
+    public function duplicate(Request $request, Section $section)
+    {
+        $tenantId = Landlord::getTenantId('tenant_id');
+        $userId = auth()->id();
+
+        return $this->copySection($section->gondola, $section->id, $tenantId, $userId);
+    }
+
+
     public function reorder(Request $request, Gondola $gondola)
     {
         $data =  $request->validate([
@@ -211,14 +223,29 @@ class SectionController extends Controller
         return redirect()->back()->with('success', 'Ordem das seções atualizada com sucesso!');
     }
 
-    /**
-     * Duplica uma seção existente
-     */
-    public function duplicate(Request $request, Section $section)
+    public function updateInvertOrder(Request $request, Gondola $gondola)
     {
-        $tenantId = Landlord::getTenantId('tenant_id');
-        $userId = auth()->id();
+        $sections =  $gondola->sections()->orderBy('ordering', 'desc')->pluck('id')->toArray();
+        if (empty($sections)) {
+            return redirect()->back()->with('error', 'Nenhuma seção foi enviada para reordenação.');
+        }
+        try {
+            foreach ($sections as $index => $value) {
+                Section::where('id', $value) // Garante que a seção existe
+                    ->where('gondola_id', $gondola->id) // Garante que a Modulo pertence à gôndola
+                    ->update(['ordering' => count($sections) - $index]);
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('planograms.show', [
+                'planogram' => $gondola->planogram_id,
+                'gondola' => $gondola->id,
+            ])->with('error', 'Erro ao atualizar a ordem das seções: ' . $e->getMessage());
+        }
 
-        return $this->copySection($section->gondola, $section->id, $tenantId, $userId);
+        return redirect()->route('planograms.show', [
+            'planogram' => $gondola->planogram_id,
+            'gondola' => $gondola->id,
+        ])
+            ->with('success', 'Ordem das seções atualizada com sucesso!');
     }
 }

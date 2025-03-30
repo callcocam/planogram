@@ -27,7 +27,5 @@ const showGondolaModal = ref<any>(null);
 
 function openGondolaModal() {
     showGondolaModal.value = true;
-}
-
-console.log(props.record);
+} 
 </script>

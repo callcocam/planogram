@@ -8,45 +8,74 @@
             <h3 class="ml-2 text-lg font-medium">Informações Básicas</h3>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div class="space-y-2">
-                <Label for="gondola_name">Nome da Gôndola *</Label>
-                <Input id="gondola_name" v-model="formLocal.gondola_name" required @change="updateForm" />
+                <Label for="name">Nome da Gôndola *</Label>
+                <Input id="name" v-model="formLocal.gondola_name" required @change="updateForm" />
             </div>
 
             <div class="space-y-2">
                 <Label for="location">Localização</Label>
                 <Input id="location" v-model="formLocal.location" placeholder="Ex: Setor de bebidas" @change="updateForm" />
+                <p class="text-xs text-gray-500">Corredor onde a gôndola está localizada</p>
+            </div>
+
+            <div class="space-y-2">
+                <Label for="side">Lado do corredor</Label>
+                <Input id="side" v-model="formLocal.side" placeholder="Ex: A, B ou 1, 2" @change="updateForm" />
+                <p class="text-xs text-gray-500">Identificação do lado do corredor</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div class="space-y-2">
                 <Label for="scale_factor">Fator de Escala</Label>
                 <Input id="scale_factor" type="number" v-model="formLocal.scale_factor" min="1" @change="updateForm" />
                 <p class="text-xs text-gray-500">Fator para escalar o modelo visual da gôndola</p>
             </div>
 
-            <div class="space-y-2">
-                <Label for="status">Status</Label>
-                <Select v-model="formLocal.status" @update:modelValue="updateForm">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Status</SelectLabel>
-                            <SelectItem value="published">Publicado</SelectItem>
-                            <SelectItem value="draft">Rascunho</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+            <div class="space-y-2 md:col-span-2">
+                <Label>Posição Fluxo</Label>
+                <div class="grid grid-cols-2 gap-2">
+                    <Button
+                        :variant="formLocal.flow === 'left_to_right' ? 'default' : 'outline'"
+                        @click="setFlow('left_to_right')"
+                        class="justify-center"
+                    >
+                        Esquerda para direita
+                    </Button>
+                    <Button
+                        :variant="formLocal.flow === 'right_to_left' ? 'default' : 'outline'"
+                        @click="setFlow('right_to_left')"
+                        class="justify-center"
+                    >
+                        Direita para esquerda
+                    </Button>
+                </div>
+                <p class="text-xs text-gray-500">Define o sentido de fluxo da gôndola</p>
             </div>
+        </div>
+
+        <div class="space-y-2">
+            <Label for="status">Status</Label>
+            <Select v-model="formLocal.status" @update:modelValue="updateForm">
+                <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        <SelectLabel>Status</SelectLabel>
+                        <SelectItem value="published">Publicado</SelectItem>
+                        <SelectItem value="draft">Rascunho</SelectItem>
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
         </div>
     </div>
 </template>
 
 <script setup>
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -84,6 +113,11 @@ onMounted(() => {
         formLocal.gondola_name = gerarCodigoGondola();
         updateForm();
     }
+
+    // Inicializar flow se ainda não estiver definido
+    if (!formLocal.flow) {
+        formLocal.flow = 'left_to_right';
+    }
 });
 
 // Observar mudanças nas props e atualizar o formulário local
@@ -100,6 +134,12 @@ watch(
     },
     { deep: true },
 );
+
+// Definir o fluxo da gôndola
+const setFlow = (flow) => {
+    formLocal.flow = flow;
+    updateForm();
+};
 
 // Função para emitir os dados atualizados ao componente pai
 const updateForm = () => {

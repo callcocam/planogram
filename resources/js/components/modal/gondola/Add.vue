@@ -38,11 +38,15 @@
                 <!-- Componentes de cada passo -->
                 <StepGondola v-if="passoAtual === 0" :form-data="formData" @update:form="updateForm" />
 
-                <StepDimensions v-if="passoAtual === 1" :form-data="formData" @update:form="updateForm" />
+                <StepModule v-if="passoAtual === 1" :form-data="formData" @update:form="updateForm" />
 
-                <StepShelves v-if="passoAtual === 2" :form-data="formData" @update:form="updateForm" />
+                <StepBase v-if="passoAtual === 2" :form-data="formData" @update:form="updateForm" />
 
-                <StepReview v-if="passoAtual === 3" :form-data="formData" />
+                <StepCremalheira v-if="passoAtual === 3" :form-data="formData" @update:form="updateForm" />
+
+                <StepShelves v-if="passoAtual === 4" :form-data="formData" @update:form="updateForm" />
+
+                <StepReview v-if="passoAtual === 5" :form-data="formData" />
             </div>
 
             <!-- Rodapé Fixo -->
@@ -71,10 +75,12 @@ import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, SaveIcon } f
 import { reactive, ref, watch } from 'vue';
 
 // Importação dos componentes de passos
-import StepDimensions from './StepDimensions.vue';
+import StepBase from './StepBase.vue';
+import StepCremalheira from './StepCremalheira.vue';
 import StepGondola from './StepGondola.vue';
-import StepShelves from './StepShelves.vue';
+import StepModule from './StepModule.vue';
 import StepReview from './StepReview.vue';
+import StepShelves from './StepShelves.vue';
 
 const props = defineProps({
     open: {
@@ -98,12 +104,14 @@ const enviando = ref(false);
 const passoAtual = ref(0);
 
 // Títulos e descrições para cada passo
-const passoTitulos = ['Informações Básicas', 'Dimensões', 'Prateleiras', 'Revisão'];
+const passoTitulos = ['Informações Básicas', 'Módulos', 'Base', 'Cremalheira', 'Prateleiras', 'Revisão'];
 
 const passoDescricoes = [
     'Preencha as informações básicas da gôndola',
-    'Configure as dimensões e especificações técnicas',
-    'Configure as prateleiras e seções',
+    'Configure os módulos da gôndola',
+    'Configure as dimensões da base',
+    'Configure a cremalheira e os furos',
+    'Configure as prateleiras e gancheiras',
     'Revise todas as informações antes de salvar',
 ];
 
@@ -111,28 +119,36 @@ const passoDescricoes = [
 const formData = reactive({
     // Informações básicas (Passo 1)
     planogram_id: props.planogramId,
-    name: props.planogram.name, // Será preenchido com código gerado automaticamente no componente StepGondola
-    gondola_name: '',
-    location: 'Centro de Distribuição',
-    status: 'published',
+    gondola_name: '', // Será preenchido com código gerado automaticamente
+    location: 'Centro',
+    side: 'A',
+    flow: 'left_to_right',
     scale_factor: 3,
+    status: 'published',
 
-    // Dimensões (Passo 2)
+    // Módulos (Passo 2)
+    num_modulos: 4,
     width: 130,
     height: 180,
-    thickness: 4,
-    base_height: 17,
-    depth: 40,
+    section_code: '',
 
-    // Prateleiras e seções (Passo 3)
-    shelf_height: 4,
-    shelf_qty: 5,
+    // Base (Passo 3)
+    base_height: 17,
+    base_width: 130,
+    base_depth: 40,
+
+    // Cremalheira (Passo 4)
+    cremalheira_width: 4,
+    hole_height: 2,
+    hole_width: 2,
     hole_spacing: 2,
-    hole_diameter: 2,
-    num_modulos: 4,
-    tipo_produto: 'normal',
-    position: 0,
-    section_width: 130, // Largura específica da seção (pode ser diferente da gôndola)
+
+    // Prateleiras (Passo 5)
+    shelf_width: 4,
+    shelf_height: 4,
+    shelf_depth: 40,
+    num_shelves: 5,
+    product_type: 'normal',
 });
 
 // Formulário do Inertia.js para envio
@@ -181,24 +197,33 @@ const resetarFormulario = () => {
 
     // Resetar formulário
     Object.assign(formData, {
-        planogram_id: props.planogramId, 
-        gondola_name: '',
+        planogram_id: props.planogramId,
+        name: '',
         location: 'Centro de Distribuição',
-        status: 'published',
+        side: '',
+        flow: 'left_to_right',
         scale_factor: 3,
-        width: 130,
-        height: 180,
-        thickness: 4,
-        base_height: 17,
-        depth: 40,
-        shelf_height: 4,
-        shelf_qty: 5,
-        hole_spacing: 2,
-        hole_diameter: 2,
+        status: 'published',
+
         num_modulos: 4,
-        tipo_produto: 'normal',
-        position: 0,
-        section_width: 130,
+        num_shelves: 5,
+        width: 130,
+        height: 180, 
+
+        base_height: 17,
+        base_width: 130,
+        base_depth: 40,
+
+        cremalheira_width: 4,
+        hole_height: 2,
+        hole_width: 2,
+        hole_spacing: 2,
+ 
+        shelf_width: 4,
+        shelf_height: 4,
+        shelf_depth: 40,
+        num_shelves: 5,
+        product_type: 'normal',
     });
 
     form.reset();
@@ -211,36 +236,46 @@ const enviarFormulario = () => {
 
     // Preparar os dados para envio em formato compatível com o backend
     const dadosEnvio = {
-        // Dados da gôndola
+        // Dados do planograma
         planogram_id: formData.planogram_id,
-        gondola_name: formData.name,
+
+        // Dados da gôndola (tabela gondolas)
+        gondola_name: formData.gondola_name,
         location: formData.location,
-        height: formData.height,
-        width: formData.width,
-        thickness: formData.thickness,
-        base_height: formData.base_height,
-        hole_spacing: formData.hole_spacing,
-        hole_diameter: formData.hole_diameter,
-        shelf_height: formData.shelf_height,
+        side: formData.side,
+        flow: formData.flow,
         scale_factor: formData.scale_factor,
-        num_modulos: formData.num_modulos,
-        tipo_produto: formData.tipo_produto,
         status: formData.status,
 
-        // Dados da seção
+        // Dados da seção (tabela sections)
         section: {
-            width: formData.section_width,
-            depth: formData.depth,
-            shelf_qty: formData.shelf_qty,
-            tipo_produto: formData.tipo_produto,
+            name: formData.name + ' - Seção', 
+            width: formData.width,
+            height: formData.height, 
+            base_height: formData.base_height,
+            base_depth: formData.base_depth,
+            base_width: formData.base_width,
+            cremalheira_width: formData.cremalheira_width,
+            hole_height: formData.hole_height,
+            hole_width: formData.hole_width,
+            hole_spacing: formData.hole_spacing,
+            shelf_width: formData.shelf_width,
+            shelf_height: formData.shelf_height,
+            shelf_depth: formData.shelf_depth,
+
+            // Dados adicionais para criação das prateleiras
+            num_shelves: formData.num_shelves,
             num_modulos: formData.num_modulos,
+            product_type: formData.product_type,
+            settings: {
+                product_type: formData.product_type,
+            },
         },
     };
 
     console.log('Dados a serem enviados:', dadosEnvio);
 
-    // Importante: Recrie o formulário com os dados em vez de usar Object.assign
-    // O Object.assign pode não estar funcionando corretamente com o Inertia.js
+    // Recrie o formulário com os dados
     form = useForm(dadosEnvio);
 
     // Enviar os dados
@@ -256,7 +291,7 @@ const enviarFormulario = () => {
 
                 // Exibir mensagem de sucesso
                 if (page.props.flash.success) {
-                    // Se você estiver usando o pacote toast, pode usar:
+                    // Se você estiver usando um pacote toast, pode usar:
                     // toast({
                     //     title: 'Sucesso',
                     //     description: page.props.flash.success,

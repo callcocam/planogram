@@ -18,6 +18,8 @@ class GondolaController extends Controller
     {
         $gondola->update(['scale_factor' => $request->scale_factor]);
 
-        return response()->json(['message' => 'Escala atualizada com sucesso.']);
+        return redirect()
+            ->back()
+            ->with('success', __('Scale factor updated successfully.'));
     }
 }

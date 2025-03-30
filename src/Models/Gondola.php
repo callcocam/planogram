@@ -7,7 +7,7 @@
  */
 
 namespace Callcocam\Planogram\Models;
- 
+
 use Callcocam\Planogram\Enums\GondolaStatus;
 use Callcocam\Raptor\Core\Concerns\Sluggable\HasSlug;
 use Callcocam\Raptor\Core\Concerns\Sluggable\SlugOptions;
@@ -26,21 +26,19 @@ class Gondola extends Model
 
     protected $fillable = [
         'tenant_id',
+        'user_id',
+        'planogram_id',
         'name',
         'slug',
-        'height',
-        'width',
-        'base_height',
-        'thickness',
-        'scale_factor',
         'location',
+        'side',
+        'flow',
+        'num_modulos',
+        'scale_factor',
         'status',
     ];
 
     protected $casts = [
-        'height' => 'integer',
-        'width' => 'integer',
-        'base_height' => 'integer',
         'scale_factor' => 'integer',
         'status' => GondolaStatus::class,
     ];

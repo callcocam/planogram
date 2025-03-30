@@ -46,8 +46,7 @@ const planogram = computed(() => {
     return props.gondola.planogram;
 });
 
-const sections = computed(() => {
-    console.log('Gondola:', props.gondola);
+const sections = computed(() => { 
     return props.gondola.sections;
 });
 
@@ -75,6 +74,7 @@ const onDragEnd = () => {
 };
 
 const deleteSection = (section: any) => {
+    // @ts-ignore
     router.delete(route('planogram.sections.destroy', section.id), {
         preserveState: false,
         preserveScroll: true,

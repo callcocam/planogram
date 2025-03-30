@@ -74,10 +74,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['edit-section', 'delete-section']);
-
-const gondola = ref<any>(props.section.gondola);
-const gramalheiraWidth = computed(() => gondola.value.thickness * props.scaleFactor);
-const baseHeight = computed(() => props.section.gondola.base_height || 17);
+ 
+const gramalheiraWidth = computed(() => props.section.cremalheira_width * props.scaleFactor);
+const baseHeight = computed(() => props.section.base_height || 17);
 
 // Estado para controlar a visibilidade do modal de confirmação
 const showDeleteConfirm = ref(false);
@@ -105,9 +104,14 @@ const holes = computed(() => {
     }
 
     const sectionHeight = props.section.height;
-    const holeHeight = props.section.gondola.shelf_height;
-    const holeWidth = props.section.gondola.hole_diameter;
-    const holeSpacing = props.section.gondola.hole_spacing;
+    const holeHeight = props.section.hole_height;
+    const holeWidth = props.section.hole_width;
+    const holeSpacing = props.section.hole_spacing;
+
+    console.log('sectionHeight', sectionHeight);
+    console.log('holeHeight', holeHeight);
+    console.log('holeWidth', holeWidth);
+    console.log('holeSpacing', holeSpacing);
 
     // Calculate available height for holes (excluding the base at the bottom)
     const availableHeight = sectionHeight - baseHeight.value;
@@ -134,7 +138,7 @@ const holes = computed(() => {
 
 const gramalheiraStyle = computed(() => {
     return {
-        width: `${gondola.value.thickness * props.scaleFactor}px`,
+        width: `${props.section.cremalheira_width * props.scaleFactor}px`,
         height: `${props.section.height * props.scaleFactor}px`,
     };
 });
