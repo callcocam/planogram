@@ -5,6 +5,9 @@
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
         @click.stop="$emit('click', shelf)"
+        draggable="true"
+        @dragstart="onDragstart"
+        @dragend="onDragend"
     >
         <!-- Conteúdo da prateleira -->
         <div class="shelf-content shelf-drag-handle flex h-full w-full items-center justify-center" :class="{ 'has-products': hasProducts }">
@@ -65,7 +68,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(['click', 'dragstart', 'dragend']);
 
 // Computed property para calcular o estilo da prateleira, incluindo posicionamento
 const shelfStyle = computed(() => {
@@ -96,6 +99,34 @@ const productsCount = computed(() => {
         return acc + (product.quantity || 1);
     }, 0);
 });
+
+// Função chamada quando o drag começa
+const onDragstart = (event) => {
+    event.target.style.opacity = '0.5'; // Diminui a opacidade da prateleira arrastada
+    event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
+    event.dataTransfer.setData('text/plain', JSON.stringify(props.shelf));
+    emit('dragstart', props.shelf);
+};
+// Função chamada quando o drag termina
+const onDragend = (event) => {
+    event.dataTransfer.clearData();
+    event.target.style.opacity = '1'; // Restaura a opacidade da prateleira
+    event.target.style.zIndex = '1'; // Restaura o z-index da prateleira
+    const shelf = props.shelf;
+    //pegar a posição da prateleira
+    const position = event.target.getBoundingClientRect();
+    const shelfPosition = {
+        left: position.left,
+        top: position.top,
+        width: position.width,
+        height: position.height,
+    };
+
+    // Atualiza a posição da prateleira
+    shelf.shelf_position = shelfPosition.top;
+ 
+    emit('dragend', shelf);
+};
 </script>
 
 <style scoped>

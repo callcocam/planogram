@@ -13,6 +13,7 @@
                     <Section
                         :section="section"
                         :scale-factor="props.scaleFactor" 
+                        @move-shelf-to-section="handleMoveShelfToSection"
                     />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
@@ -31,6 +32,7 @@ import Section from './Section.vue';
 import { Button } from '@/components/ui/button';
 // @ts-ignore
 import draggable from 'vuedraggable';
+import { round } from 'lodash';
 
 const props = defineProps({
     gondola: {
@@ -84,6 +86,33 @@ const deleteSection = (section: any) => {
         },
     });
     // emit('delete-section', section);
+};
+
+const handleMoveShelfToSection = (shelf: any, sectionId: number) => {
+    
+    sortableSections.value = sortableSections.value.map((section: any) => {
+        if (section.id === sectionId) {
+            section.shelves.push(shelf);
+        }
+        return section;
+    });
+    // @ts-ignore
+    router.put(route('planogram.shelves.update-section', shelf.id), {
+        section_id: sectionId,
+        new_position: round(shelf.shelf_position),
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            // Handle success if needed
+        },
+        onError: () => {
+            // Handle error if needed
+        },
+        onFinish: () => {
+            // Reset the state if needed
+        },
+    });
 };
  
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <div :style="sectionStyle">
+    <div :style="sectionStyle" @drop.prevent="onDrop" @dragover.prevent="onDragOver" :data-section-id="section.id" @dragleave="onDragleave">
         <Shelf
             v-for="(shelf, index) in sortableShelves"
             :shelf="shelf"
@@ -37,9 +37,6 @@ const props = defineProps({
 
 const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section']);
 
-const gondola = ref<any>(props.section.gondola);
-console.log('gondola', props.section);
-
 // Criar ref para prateleiras que podemos modificar com draggable
 const sortableShelves = ref<any[]>([]);
 
@@ -71,6 +68,87 @@ const baseHeight = computed(() => {
     if (baseHeightCm <= 0) return 0;
     return baseHeightCm * props.scaleFactor;
 });
+
+const onDrop = (event: DragEvent) => {
+    const jsonData = event.dataTransfer?.getData('text/plain') as any;
+    if (jsonData) {
+        try {
+            const data = JSON.parse(jsonData);
+console.log('Position atual:', data.shelf_position);
+            // Obter a posição do mouse em relação à janela
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            // Obter as coordenadas da seção
+            const target = event.currentTarget as HTMLElement;
+            const sectionRect = target.getBoundingClientRect();
+
+            // Calcular a posição relativa do mouse dentro da seção
+            const relativeX = mouseX - sectionRect.left;
+            const relativeY = mouseY - sectionRect.top;
+
+            // Converter para a posição em cm (dividindo pelo fator de escala)
+            const positionXInCm = relativeX / props.scaleFactor;
+            const positionYInCm = relativeY / props.scaleFactor;
+
+            // Adicionar a posição ao objeto da prateleira
+            const shelf = {
+                ...data,
+                section_id: props.section.id,
+                shelf_position: positionYInCm,
+            };
+
+            // Emitir evento para mover a prateleira para a seção
+            emit('move-shelf-to-section', shelf, props.section.id);
+        } catch (error) {
+            console.error('Erro ao processar dados do drop:', error);
+        }
+    }
+
+    // Remove a classe CSS quando o mouse sai da seção
+    const target = event.currentTarget as HTMLElement;
+    target.classList.remove('drag-over');
+};
+/**
+ * Gerencia o evento quando um item está sendo arrastado sobre a seção
+ * @param event - O evento de arrastar (DragEvent)
+ */
+const onDragOver = (event: DragEvent) => {
+    // Previne o comportamento padrão para permitir o drop
+    event.preventDefault();
+
+    // Verifica se dataTransfer está disponível
+    if (!event.dataTransfer) return;
+
+    // Obtém o elemento alvo (a seção)
+    const target = event.currentTarget as HTMLElement;
+
+    // Se já tiver a classe drag-over, não faz nada
+    if (target.classList.contains('drag-over')) return;
+
+    // Obtém a posição do mouse e do elemento para cálculos futuros
+    const mouseY = event.clientY;
+    const targetRect = target.getBoundingClientRect();
+
+    // Registra informações para depuração
+    // console.log('Posição da seção:', targetRect);
+    // console.log('Evento de arrastar ativado na posição Y:', mouseY);
+
+    // Adiciona a classe CSS para feedback visual
+    target.classList.add('drag-over');
+};
+
+/**
+ * Gerencia o evento quando o cursor sai da área da seção durante o arrasto
+ * @param event - O evento de mouse (MouseEvent)
+ */
+const onDragleave = (event: MouseEvent) => {
+    // Obtém o elemento alvo (a seção)
+    const target = event.currentTarget as HTMLElement;
+
+    // Remove a classe CSS de feedback visual
+    target.classList.remove('drag-over');
+};
 </script>
 
 <style scoped>
@@ -87,6 +165,11 @@ const baseHeight = computed(() => {
 
 .section:hover {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.drag-over {
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 2px dashed rgba(59, 130, 246, 0.5);
 }
 
 /* Estilo para tema escuro */

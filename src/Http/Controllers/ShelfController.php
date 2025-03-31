@@ -106,7 +106,7 @@ class ShelfController extends Controller
             'new_position' => 'nullable|integer|min:0',
         ]);
 
-        try {
+        try { 
             // Atualiza a seção da prateleira
             $shelf->section_id = $validated['section_id'];
             $shelf->shelf_position = $validated['new_position'] ?? $shelf->shelf_position;

@@ -25,8 +25,6 @@ Route::middleware(['auth', 'verified', 'web'])
         Route::post('/sections/{section}/duplicate', [\Callcocam\Planogram\Http\Controllers\SectionController::class, 'duplicate'])->name('sections.duplicate');
 
         Route::put('/shelves/{shelf}/section', [\Callcocam\Planogram\Http\Controllers\ShelfController::class, 'updateSection'])->name('shelves.update-section');
-        Route::put('/shelves/{shelf}/move-to-section', [\Callcocam\Planogram\Http\Controllers\ShelfController::class, 'updateSection'])->name('planogram.shelves.move-to-section');
-        Route::put('/shelves/{shelf}/update-positions', [\Callcocam\Planogram\Http\Controllers\ShelfController::class, 'updateSection'])->name('planogram.shelves.update-positions');
 
         Route::resource('segments', \Callcocam\Planogram\Http\Controllers\SegmentController::class)
             ->names('segments');
