@@ -1,7 +1,7 @@
 <!-- Versão atualizada do Shelf.vue para drag and drop -->
 <template>
     <div
-        class="shelf group relative border border-gray-400 bg-gray-300"
+        class="shelf group relative border border-gray-400 bg-gray-700 dark:bg-gray-800 text-gray-50"
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
         @click.stop="$emit('click', shelf)"
@@ -14,9 +14,9 @@
             <!-- Indicador de produtos -->
             <div v-if="hasProducts" class="product-indicator flex items-center">
                 <PackageIcon class="h-3 w-3 text-primary" />
-                <span class="ml-1 text-xs font-medium text-gray-700">{{ productsCount }}</span>
+                <span class="ml-1 text-xs font-medium text-gray-100">{{ productsCount }}</span>
             </div>
-            <div v-else class="shelf-empty text-xs text-gray-500">
+            <div v-else class="shelf-empty text-xs text-gray-100">
                 Vazia - {{ shelf.ordering }}
                 <span class="ml-2 text-xs opacity-50">({{ shelf.shelf_position.toFixed(1) }}cm)</span>
             </div>
@@ -104,7 +104,7 @@ const productsCount = computed(() => {
 const onDragstart = (event) => {
     event.target.style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
     event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
-    event.dataTransfer.setData('text/plain', JSON.stringify(props.shelf));
+    event.dataTransfer.setData('text/shelf', JSON.stringify(props.shelf));
     emit('dragstart', props.shelf);
 };
 // Função chamada quando o drag termina

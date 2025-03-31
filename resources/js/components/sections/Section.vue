@@ -70,11 +70,10 @@ const baseHeight = computed(() => {
 });
 
 const onDrop = (event: DragEvent) => {
-    const jsonData = event.dataTransfer?.getData('text/plain') as any;
-    if (jsonData) {
+    const jsonDataShelf = event.dataTransfer?.getData('text/shelf') as any; 
+    if (jsonDataShelf) {
         try {
-            const data = JSON.parse(jsonData);
-console.log('Position atual:', data.shelf_position);
+            const data = JSON.parse(jsonDataShelf); 
             // Obter a posição do mouse em relação à janela
             const mouseX = event.clientX;
             const mouseY = event.clientY;

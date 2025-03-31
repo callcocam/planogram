@@ -3,7 +3,7 @@
         <!-- Botões que aparecem apenas no hover, posicionados acima da gramalheira em coluna -->
         <div
             v-if="!props.isLastSection"
-            class="absolute -top-24 left-1/2 flex -translate-x-1/2 transform flex-col space-y-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+            class="absolute -top-24 left-1/2 flex -translate-x-1/2 transform flex-col space-y-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 z-[200]"
         >
             <Button size="sm" class="h-6 w-6 p-0" variant="secondary" @click="$emit('edit-section', section)">
                 <PencilIcon class="h-3 w-3" />

@@ -4,24 +4,24 @@
             <!-- Alça de arrasto acoplada ao conteúdo -->
             <div
                 title="Arraste para mover"
-                class="drag-handle flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+                class="drag-handle flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
                 @mousedown="startDrag"
                 @touchstart="startDrag"
                 :class="{ 'bg-primary/90': isDragging }"
             >
                 <span class="sr-only">Mover Gôndola</span>
-                <Move class="w-5 h-5" />
+                <Move class="h-5 w-5" />
             </div>
 
             <!-- Slot para o conteúdo original (seu SectionList) -->
-            <div class="content-slot ">
+            <div class="content-slot">
                 <slot></slot>
             </div>
 
             <!-- Botão para centralizar também acoplado ao conteúdo -->
-            <button 
-                class="center-button bg-card hover:bg-accent text-muted-foreground hover:text-accent-foreground shadow-sm border border-border rounded-full flex items-center justify-center transition-all duration-200"
-                @click="resetPosition" 
+            <button
+                class="center-button flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
+                @click="resetPosition"
                 title="Centralizar Gôndola"
             >
                 <svg
@@ -54,6 +54,11 @@ const props = defineProps({
     storageId: {
         type: String,
         default: 'default-content',
+    },
+    // Fator de escala para ajustar o conteúdo
+    scaleFactor: {
+        type: Number,
+        default: 1,
     },
 });
 
@@ -200,22 +205,23 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .movable-container {
-    position: relative; 
+    position: relative;
     min-height: 300px;
     overflow: visible;
+    width: 100%;
 }
 
 .movable-content {
     position: relative;
     transition: transform 0.1s ease;
-    will-change: transform; 
+    will-change: transform;
 }
 
 .movable-content.is-dragging {
     transition: none;
 }
 
-.content-slot { 
+.content-slot {
     position: relative;
 }
 
@@ -239,13 +245,12 @@ onBeforeUnmount(() => {
 /* Estilo para o botão de centralizar */
 .center-button {
     position: absolute;
-    top: 15%;  
+    top: 15%;
     right: -40px;
     width: 36px;
     height: 36px;
     z-index: 100;
 }
- 
 
 /* Responsividade para telas menores */
 @media (max-width: 640px) {

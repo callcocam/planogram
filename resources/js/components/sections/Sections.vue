@@ -1,6 +1,6 @@
 <template>
-    <div class="flex w-full flex-col rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 md:flex-row">
-        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="flex w-full flex-col md:flex-row">
+    <div class="flex w-full flex-col   bg-white shadow-sm   dark:bg-gray-800 md:flex-row mt-28">
+        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="flex w-full  md:flex-row">
             <template #item="{ element: section, index }">
                 <div class="flex items-center">
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" @delete-section="deleteSection">
