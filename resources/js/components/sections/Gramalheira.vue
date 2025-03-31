@@ -19,10 +19,10 @@
             :key="index"
             class="absolute bg-slate-100"
             :style="{
-                width: `${hole.width}px`,
-                height: `${hole.height}px`,
-                top: `${hole.position}px`,
-                left: `${(gramalheiraWidth - hole.width) / 2}px`,
+                width: `${hole.width * scaleFactor}px`,
+                height: `${hole.height * scaleFactor}px`,
+                top: `${hole.position * scaleFactor}px`,
+                left: `${(gramalheiraWidth - hole.width * scaleFactor) / 2}px`,
             }"
         ></div>
 
@@ -49,7 +49,7 @@
     />
 </template>
 <script setup lang="ts">
-import { PencilIcon, TrashIcon } from 'lucide-vue-next'; 
+import { PencilIcon, TrashIcon } from 'lucide-vue-next';
 // @ts-ignore
 import { Button } from '@/components/ui/button';
 import { computed, ref } from 'vue';
@@ -74,7 +74,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['edit-section', 'delete-section']);
- 
+
 const gramalheiraWidth = computed(() => props.section.cremalheira_width * props.scaleFactor);
 const baseHeight = computed(() => props.section.base_height || 17);
 
@@ -96,50 +96,12 @@ function cancelDelete(): void {
     showDeleteConfirm.value = false;
 }
 
-const holes = computed(() => {
-    interface Hole {
-        width: number;
-        height: number;
-        position: number;
-    }
-
-    const sectionHeight = props.section.height;
-    const holeHeight = props.section.hole_height;
-    const holeWidth = props.section.hole_width;
-    const holeSpacing = props.section.hole_spacing;
-
-    console.log('sectionHeight', sectionHeight);
-    console.log('holeHeight', holeHeight);
-    console.log('holeWidth', holeWidth);
-    console.log('holeSpacing', holeSpacing);
-
-    // Calculate available height for holes (excluding the base at the bottom)
-    const availableHeight = sectionHeight - baseHeight.value;
-
-    // Calculate how many holes we can fit
-    const totalSpaceNeeded = holeHeight + holeSpacing;
-    const holeCount = Math.floor(availableHeight / totalSpaceNeeded);
-
-    // Calculate the remaining space to distribute evenly
-    const remainingSpace = availableHeight - holeCount * holeHeight - (holeCount - 1) * holeSpacing;
-    const marginTop = remainingSpace / 2; // Start from the top with margin
-
-    const holes: Hole[] = [];
-    for (let i = 0; i < holeCount; i++) {
-        holes.push({
-            width: holeWidth * props.scaleFactor,
-            height: holeHeight * props.scaleFactor,
-            position: (marginTop + i * (holeHeight + holeSpacing)) * props.scaleFactor,
-        });
-    }
-
-    return holes;
-});
-
 const gramalheiraStyle = computed(() => {
     return {
         width: `${props.section.cremalheira_width * props.scaleFactor}px`,
         height: `${props.section.height * props.scaleFactor}px`,
     };
 });
+
+const holes = computed(() => props.section.settings.holes);
 </script>

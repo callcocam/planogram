@@ -1,6 +1,6 @@
 <template>
     <div>
-        <Tabs :default-value="firstGondolaId" v-model="selectedGondolaId" class="w-full" v-if="gondolas.length" @update:modelValue="setActiveTab">
+        <Tabs v-model="selectedGondolaId" class="w-full" v-if="gondolas.length">
             <TabsList class="flex items-center justify-around">
                 <TabsTrigger v-for="gondola in gondolas" :key="gondola.id" :value="gondola.id" class="w-full truncate text-sm">
                     {{ gondola.name }}
@@ -52,10 +52,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router } from '@inertiajs/vue3';
 import { PlusIcon, ShoppingBagIcon } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Info from './components/gondola/Info.vue';
 import Sections from './components/sections/Sections.vue';
 import MovableContainer from './MovableContainer.vue';
+
+const emit = defineEmits(['add-gondola']);
 
 const props = defineProps({
     planogram: {
@@ -63,87 +65,90 @@ const props = defineProps({
         required: true,
     },
 });
-const showSectionModal = ref(false);
 
-// Mapeamento simplificado das propriedades da gôndola
+// Mapeamento das propriedades da gôndola
 const gondolas = computed(() => {
-    if (!props.planogram?.gondolas?.length) return [];
-
-    return props.planogram.gondolas;
+    return props.planogram?.gondolas?.length ? props.planogram.gondolas : [];
 });
-const selectedGondolaId = ref(gondolas.value.length > 0 ? gondolas.value[0].id : '');
 
-// ID da primeira gôndola (se existir)
-const firstGondolaId = ref(gondolas.value.length > 0 ? gondolas.value[0].id : '');
+// ID da gôndola selecionada
+const selectedGondolaId = ref('');
+
+// Inicializa o componente
+onMounted(() => {
+    initializeSelectedGondola();
+});
+
+// Função para inicializar a gôndola selecionada
+function initializeSelectedGondola() {
+    const { gondola } = route().params || route().queryParams || {};
+
+    // Verifica se existe uma gôndola na URL e se ela existe no array de gôndolas
+    if (gondola && gondolas.value.some((g) => g.id === gondola)) {
+        selectedGondolaId.value = gondola;
+    } else if (gondolas.value.length > 0) {
+        // Caso contrário, seleciona a primeira gôndola
+        selectedGondolaId.value = gondolas.value[0].id;
+    }
+
+    console.log('Gôndola selecionada:', selectedGondolaId.value);
+}
+
+// Observa mudanças nas gôndolas para garantir que sempre haja uma selecionada
+watch(
+    () => gondolas.value,
+    (newGondolas) => {
+        if (newGondolas.length > 0 && !selectedGondolaId.value) {
+            selectedGondolaId.value = newGondolas[0].id;
+        } else if (newGondolas.length > 0 && !newGondolas.some((g) => g.id === selectedGondolaId.value)) {
+            // Se a gôndola selecionada não existir mais, seleciona a primeira
+            selectedGondolaId.value = newGondolas[0].id;
+        }
+    },
+    { deep: true },
+);
+
 // Atualiza as seções da gôndola
-const updateSections = (sections: any, gondolaId: any) => {
-    const sectionIds = sections.map((section: any) => section.id);
-    // @ts-ignore
+const updateSections = (sections, gondolaId) => {
+    const sectionIds = sections.map((section) => section.id);
+
     router.put(
         route('planogram.sections.reorder', gondolaId),
         {
             sections: sectionIds,
         },
         {
-            preserveState: false,
+            preserveState: true,
             preserveScroll: true,
-            onSuccess: () => {},
         },
     );
 };
 
-// Atualiza o ID da gôndola ativa
-const setActiveTab = (gondolaId: any) => {
-    selectedGondolaId.value = gondolaId;
-};
 // Atualiza o fator de escala da gôndola
-const updateScaleFactor = (scaleFactor: number, gondolaId: any) => {
-    // @ts-ignore
+const updateScaleFactor = (scaleFactor, gondolaId) => {
     router.put(
         route('planogram.gondolas.updateScaleFactor', gondolaId),
         {
             scale_factor: scaleFactor,
         },
         {
-            preserveState: false,
+            preserveState: true,
             preserveScroll: true,
-            onSuccess: () => {},
         },
     );
 };
 
 // Atualiza a ordem das gôndolas
-const updateInvertOrder = (gondolaId: any) => {
-    // @ts-ignore
+const updateInvertOrder = (gondolaId) => {
     router.put(
         route('planogram.sections.updateInvertOrder', gondolaId),
         {
             invert_order: true,
         },
         {
-            preserveState: false,
+            preserveState: true,
             preserveScroll: true,
-            onSuccess: () => {
-                console.log('Inverted', gondolaId);
-                selectedGondolaId.value = gondolaId;
-            },
-            onFinish: () => {
-                console.log('Prefetched', gondolaId);
-                selectedGondolaId.value = gondolaId;
-            },
         },
     );
 };
-
-onMounted(() => {
-    const { gondola } = route().queryParams;
-
-    if (gondola) {
-        selectedGondolaId.value = gondola;
-    } else {
-        if(!gondolas.value.length) return;
-        // Se não houver gôndola selecionada, selecione a primeira
-        selectedGondolaId.value = gondolas.value[0].id;
-    }
-});
 </script>

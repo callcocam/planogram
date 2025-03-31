@@ -11,6 +11,7 @@ namespace Callcocam\Planogram;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Callcocam\Planogram\Commands\PlanogramCommand;
+use Callcocam\Planogram\Services\ShelfPositioningService;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 
 class PlanogramServiceProvider extends PackageServiceProvider
@@ -50,5 +51,13 @@ class PlanogramServiceProvider extends PackageServiceProvider
                     ->copyAndRegisterServiceProviderInApp()
                     ->askToStarRepoOnGitHub('callcocam/planogram');
             });
+    }
+
+
+    public function packageRegistered()
+    {
+        $this->app->singleton(ShelfPositioningService::class, function ($app) {
+            return new ShelfPositioningService();
+        });
     }
 }

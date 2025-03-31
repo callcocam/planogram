@@ -1,12 +1,24 @@
 <template>
-     <div :style="sectionStyle">
-         {{ section.name }}
-     </div>
+    <div :style="sectionStyle">
+        <Shelf
+            v-for="(shelf, index) in sortableShelves"
+            :shelf="shelf"
+            :scaleFactor="props.scaleFactor"
+            :sectionWidth="props.section.width"
+            :sectionHeight="props.section.height"
+            :baseHeight="baseHeight"
+            :numberOfShelves="sortableShelves.length"
+            :currentIndex="index"
+            @click="$emit('select-shelf', shelf)"
+        >
+        </Shelf>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import Shelf from './Shelf.vue';
+import { computed, ref, watch } from 'vue';
+import Shelf from './shelf/Shelf.vue';
+// @ts-ignore
 
 const props = defineProps({
     section: {
@@ -23,14 +35,31 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['select-shelf', 'add-shelf']);
+const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section']);
 
 const gondola = ref<any>(props.section.gondola);
+console.log('gondola', props.section);
+
+// Criar ref para prateleiras que podemos modificar com draggable
+const sortableShelves = ref<any[]>([]);
+
+// Inicializar e atualizar sortableShelves quando props.section.shelves mudar
+watch(
+    () => props.section.shelves,
+    (newShelves) => {
+        sortableShelves.value = [...(newShelves || [])];
+    },
+    { immediate: true, deep: true },
+);
+
+const isEmpty = computed(() => {
+    return sortableShelves.value.length === 0;
+});
 
 const sectionStyle = computed(() => {
     return {
         width: `${props.section.width * props.scaleFactor}px`,
-        height: `${props.section.height * props.scaleFactor}px`, 
+        height: `${props.section.height * props.scaleFactor}px`,
         position: 'relative' as const,
         overflow: 'hidden',
     };
@@ -38,13 +67,20 @@ const sectionStyle = computed(() => {
 
 // Altura da base em pixels
 const baseHeight = computed(() => {
-    const baseHeightCm = props.section.gondola.base_height || 0;
+    const baseHeightCm = props.section.base_height || 0;
     if (baseHeightCm <= 0) return 0;
     return baseHeightCm * props.scaleFactor;
 });
 </script>
 
 <style scoped>
+.empty-placeholder {
+    background-color: rgba(229, 231, 235, 0.2);
+    border: 1px dashed #d1d5db;
+    border-radius: 4px;
+    z-index: 0;
+}
+
 .section {
     transition: all 0.2s ease;
 }
@@ -76,5 +112,10 @@ const baseHeight = computed(() => {
 
 :global(.dark) .empty-shelves-indicator button:hover {
     background-color: #4b5563;
+}
+
+:global(.dark) .empty-placeholder {
+    background-color: rgba(55, 65, 81, 0.2);
+    border-color: #4b5563;
 }
 </style>

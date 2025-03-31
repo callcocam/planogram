@@ -103,13 +103,20 @@ class ShelfController extends Controller
     {
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
+            'new_position' => 'nullable|integer|min:0',
         ]);
 
         try {
             // Atualiza a seção da prateleira
             $shelf->section_id = $validated['section_id'];
+            $shelf->shelf_position = $validated['new_position'] ?? $shelf->shelf_position;
 
             $shelf->save();
+
+            // Atualiza a num_shelves da seção
+            $section = Section::find($validated['section_id']);
+            $section->num_shelves = $section->shelves()->count();
+            $section->save();
             return redirect()->back()->with('success', 'Seção da prateleira atualizada com sucesso')->with('record', $shelf->load('section'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Seção não encontrada: ' . $e->getMessage());

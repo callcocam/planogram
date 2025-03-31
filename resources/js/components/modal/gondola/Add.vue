@@ -16,8 +16,7 @@
                         <div
                             class="flex h-8 w-8 flex-none items-center justify-center rounded-full text-sm font-medium"
                             :class="{
-                                'bg-black text-white': passoAtual > index,
-                                'bg-black text-white': passoAtual === index,
+                                'bg-black text-white': passoAtual >= index,
                                 'bg-gray-200 text-gray-700': passoAtual < index,
                             }"
                         >
@@ -67,8 +66,10 @@
     </Dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
+// @ts-ignore
 import { Button } from '@/components/ui/button';
+// @ts-ignore
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/vue3';
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, SaveIcon } from 'lucide-vue-next';
@@ -139,7 +140,7 @@ const formData = reactive({
 
     // Cremalheira (Passo 4)
     cremalheira_width: 4,
-    hole_height: 2,
+    hole_height: 3,
     hole_width: 2,
     hole_spacing: 2,
 
@@ -147,7 +148,7 @@ const formData = reactive({
     shelf_width: 4,
     shelf_height: 4,
     shelf_depth: 40,
-    num_shelves: 5,
+    num_shelves: 4,
     product_type: 'normal',
 });
 
@@ -206,7 +207,7 @@ const resetarFormulario = () => {
         status: 'published',
 
         num_modulos: 4,
-        num_shelves: 5,
+        num_shelves: 4,
         width: 130,
         height: 180, 
 
@@ -215,14 +216,13 @@ const resetarFormulario = () => {
         base_depth: 40,
 
         cremalheira_width: 4,
-        hole_height: 2,
+        hole_height: 3,
         hole_width: 2,
         hole_spacing: 2,
  
         shelf_width: 4,
         shelf_height: 4,
-        shelf_depth: 40,
-        num_shelves: 5,
+        shelf_depth: 40, 
         product_type: 'normal',
     });
 
@@ -249,7 +249,7 @@ const enviarFormulario = () => {
 
         // Dados da seção (tabela sections)
         section: {
-            name: formData.name + ' - Seção', 
+            name: formData.gondola_name + ' - Seção', 
             width: formData.width,
             height: formData.height, 
             base_height: formData.base_height,
@@ -279,26 +279,16 @@ const enviarFormulario = () => {
     form = useForm(dadosEnvio);
 
     // Enviar os dados
-    form.put(
-        route('planogram.planogram.update', {
+    // @ts-ignore
+    // console.log('holes:', holes(formData, formData.scale_factor));
+    form.put(route('planogram.planogram.update', {
             planogram: props.planogramId,
         }),
         {
             preserveScroll: true,
             onSuccess: (page) => {
                 emit('gondola-added');
-                fecharModal();
-
-                // Exibir mensagem de sucesso
-                if (page.props.flash.success) {
-                    // Se você estiver usando um pacote toast, pode usar:
-                    // toast({
-                    //     title: 'Sucesso',
-                    //     description: page.props.flash.success,
-                    //     variant: 'success',
-                    // });
-                    console.log('Sucesso:', page.props.flash.success);
-                }
+                fecharModal(); 
             },
             onError: (errors) => {
                 console.error('Erros:', errors);
@@ -309,4 +299,5 @@ const enviarFormulario = () => {
         },
     );
 };
+ 
 </script>

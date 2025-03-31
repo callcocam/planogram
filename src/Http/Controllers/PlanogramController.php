@@ -15,6 +15,7 @@ use Callcocam\Planogram\Models\Planogram;
 use Callcocam\Planogram\Models\Gondola;
 use Callcocam\Planogram\Models\Section;
 use Callcocam\Planogram\Models\Shelf;
+use Callcocam\Planogram\Services\ShelfPositioningService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
@@ -31,24 +32,25 @@ class PlanogramController extends Controller
         DB::beginTransaction();
 
         try {
-            // $planogram->gondolas->map(function ($gondola) use ($request) {
-            //     // Atualizar gôndola
-            //     $gondola->sections->map(function ($section) use ($request) {
-            //         // Atualizar seção
-            //         $section->shelves->map(function ($shelf) use ($request) {
-            //             // Atualizar prateleira
-            //             $shelf->forceDelete();
-            //         });
-            //         $section->forceDelete();
-            //     });
-            //     $gondola->forceDelete();
-            // });
+            $planogram->gondolas->map(function ($gondola) use ($request) {
+                // Atualizar gôndola
+                $gondola->sections->map(function ($section) use ($request) {
+                    // Atualizar seção
+                    $section->shelves->map(function ($shelf) use ($request) {
+                        // Atualizar prateleira
+                        $shelf->forceDelete();
+                    });
+                    $section->forceDelete();
+                });
+                $gondola->forceDelete();
+            });
             // Validar e atualizar o planograma
             $data = $request->validated();
             $planogram->update($data);
 
             // Se temos dados para criar uma nova gôndola
             if ($request->has('gondola_name')) {
+                $shelfService =  new ShelfPositioningService();
                 // Obtém os dados da seção, se disponíveis
                 $sectionData = $request->has('section') ? $request->input('section') : [];
 
@@ -63,7 +65,7 @@ class PlanogramController extends Controller
                     'num_modulos' => isset($sectionData['num_modulos']) ? (int)$sectionData['num_modulos'] : 1,
                     'status' => $request->input('status', 'draft'),
                     'user_id' => auth()->id(),
-                    'tenant_id' => $request->input('tenant_id', null),
+                    'tenant_id' => $planogram->tenant_id,
                 ];
 
                 // Criar a gôndola
@@ -81,58 +83,56 @@ class PlanogramController extends Controller
                             $sectionName = $num . '# Seção';
                         }
 
+                        $sectionSettings = $sectionData['settings'] ?? [];
+                        $sectionSettings['holes'] = $shelfService->calculateHoles($sectionData, $gondola->scale_factor);
+
                         // Preparar dados da seção
                         $sectionToCreate = [
                             'gondola_id' => $gondola->id,
                             'name' => $sectionName,
                             'code' => 'S' . now()->format('ymd') . rand(1000, 9999),
-                            'width' => $sectionData['width'] ?? 130,
-                            'height' => $sectionData['height'] ?? 180,
-                            'base_height' => $sectionData['base_height'] ?? 17,
-                            'base_depth' => $sectionData['base_depth'] ?? 40,
-                            'base_width' => $sectionData['base_width'] ?? 130,
-                            'cremalheira_width' => $sectionData['cremalheira_width'] ?? 4,
-                            'hole_height' => $sectionData['hole_height'] ?? 2,
-                            'hole_width' => $sectionData['hole_width'] ?? 2,
-                            'hole_spacing' => $sectionData['hole_spacing'] ?? 2,
+                            'width' => data_get($sectionData, 'width', 130),
+                            'height' => data_get($sectionData, 'height', 180),
+                            'num_shelves' =>  data_get($sectionData, 'num_shelves', 4),
+                            'base_height' => data_get($sectionData, 'base_height', 17),
+                            'base_depth' => data_get($sectionData, 'base_depth', 40),
+                            'base_width' => data_get($sectionData, 'base_width', 17),
+                            'cremalheira_width' => data_get($sectionData, 'cremalheira_width', 4),
+                            'hole_height' => data_get($sectionData, 'hole_height', 2),
+                            'hole_width' => data_get($sectionData, 'hole_width', 2),
+                            'hole_spacing' => data_get($sectionData, 'hole_spacing', 2),
                             'ordering' => $num,
-                            'settings' => $sectionData['settings'] ?? null,
+                            'settings' =>  $sectionSettings,
                             'status' => $request->input('status', 'draft'),
                             'user_id' => auth()->id(),
-                            'tenant_id' => $request->input('tenant_id', null),
+                            'tenant_id' => $planogram->tenant_id,
                         ];
 
                         // Criar a seção
                         $section = $gondola->sections()->create($sectionToCreate);
 
                         // Definir a quantidade de prateleiras
-                        $shelfQty = isset($sectionData['shelf_qty']) ? (int)$sectionData['shelf_qty'] : 5;
-                        $product_type = $sectionData['product_type'] ?? 'normal';
-
-                        // Calcular espaçamento entre prateleiras
-                        $totalHeight = isset($sectionData['height']) ? (int)$sectionData['height'] : 180;
-                        $baseHeight = isset($sectionData['base_height']) ? (int)$sectionData['base_height'] : 17;
-                        $availableHeight = $totalHeight - $baseHeight;
-                        $spacing = $shelfQty > 1 ? $availableHeight / ($shelfQty - 1) : 0;
+                        $shelfQty = data_get($sectionData, 'num_shelves', 4);
+                        $product_type = data_get($sectionData, 'product_type', 'normal'); 
 
                         // Criar prateleiras
                         for ($i = 0; $i < $shelfQty; $i++) {
                             // Calcular posição vertical da prateleira (shelf_position)
-                            $position = $i === 0 ? 0 : $baseHeight + ($i - 1) * $spacing;
+                            $position = $shelfService->calculateShelfPosition($shelfQty, data_get($sectionData, 'shelf_height', 4), data_get($sectionSettings, 'holes', []), $i, $gondola->scale_factor);
 
                             $shelfData = [
                                 'section_id' => $section->id,
                                 'code' => 'SLF' . $i . '-' . now()->format('ymd') . rand(100, 999),
                                 'product_type' => $product_type,
-                                'shelf_width' => $sectionData['shelf_width'] ?? 4,
-                                'shelf_height' => $sectionData['shelf_height'] ?? 4,
-                                'shelf_depth' => $sectionData['shelf_depth'] ?? 40,
+                                'shelf_width' => data_get($sectionData, 'shelf_width', 130),
+                                'shelf_height' => data_get($sectionData, 'shelf_height', 4),
+                                'shelf_depth' => data_get($sectionData, 'shelf_depth', 40),
                                 'shelf_position' => round($position),
                                 'ordering' => $i,
-                                'settings' => $sectionData['settings'] ?? null,
+                                'settings' => [],
                                 'status' => $request->input('status', 'draft'),
                                 'user_id' => auth()->id(),
-                                'tenant_id' => $request->input('tenant_id', null),
+                                'tenant_id' => $planogram->tenant_id,
                             ];
 
                             $section->shelves()->create($shelfData);
@@ -175,4 +175,5 @@ class PlanogramController extends Controller
             return redirect()->back()->with('error', 'Erro ao excluir o planogram: ' . $e->getMessage());
         }
     }
+ 
 }

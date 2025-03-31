@@ -10,7 +10,10 @@
                             </Button>
                         </template>
                     </Gramalheira>
-                    <Section :section="section" :scale-factor="props.scaleFactor" />
+                    <Section
+                        :section="section"
+                        :scale-factor="props.scaleFactor" 
+                    />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
             </template>
@@ -19,9 +22,9 @@
 </template>
 
 <script setup lang="ts">
+import { router } from '@inertiajs/vue3';
 import { MoveIcon } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
 import Gramalheira from './Gramalheira.vue';
 import Section from './Section.vue';
 // @ts-ignore
@@ -40,31 +43,22 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['sections-reordered']);
+const emit = defineEmits(['sections-reordered', 'shelves-updated']);
 
 const planogram = computed(() => {
     return props.gondola.planogram;
 });
 
-const sections = computed(() => { 
+const sections = computed(() => {
     return props.gondola.sections;
 });
 
 const lastSection = computed(() => {
     return sections.value[sections.value.length - 1];
-});
-const firstSection = computed(() => {
-    return sections.value[0];
-});
+}); 
 const isLastSection = (section) => {
     return section.id === lastSection.value.id;
-};
-const isFirstSection = (section) => {
-    return section.id === firstSection.value.id;
-};
-const isFirstOrLastSection = (section) => {
-    return isFirstSection(section) || isLastSection(section);
-};
+}; 
 // Create a ref for sections so we can modify it with draggable
 const sortableSections = ref(sections.value);
 
@@ -91,4 +85,5 @@ const deleteSection = (section: any) => {
     });
     // emit('delete-section', section);
 };
+ 
 </script>
