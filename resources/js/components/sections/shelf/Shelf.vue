@@ -102,7 +102,7 @@ const productsCount = computed(() => {
 
 // Função chamada quando o drag começa
 const onDragstart = (event) => {
-    event.target.style.opacity = '0.5'; // Diminui a opacidade da prateleira arrastada
+    event.target.style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
     event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
     event.dataTransfer.setData('text/plain', JSON.stringify(props.shelf));
     emit('dragstart', props.shelf);

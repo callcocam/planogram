@@ -90,18 +90,12 @@ const deleteSection = (section: any) => {
 
 const handleMoveShelfToSection = (shelf: any, sectionId: number) => {
     
-    sortableSections.value = sortableSections.value.map((section: any) => {
-        if (section.id === sectionId) {
-            section.shelves.push(shelf);
-        }
-        return section;
-    });
     // @ts-ignore
     router.put(route('planogram.shelves.update-section', shelf.id), {
         section_id: sectionId,
         new_position: round(shelf.shelf_position),
     }, {
-        preserveState: true,
+        preserveState: false,
         preserveScroll: true,
         onSuccess: () => {
             // Handle success if needed

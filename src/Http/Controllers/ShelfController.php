@@ -16,6 +16,7 @@ use Callcocam\Planogram\Models\Product;
 use Callcocam\Planogram\Models\Section;
 use Callcocam\Planogram\Models\Segment;
 use Callcocam\Planogram\Models\Shelf;
+use Callcocam\Planogram\Services\ShelfPositioningService;
 use Illuminate\Http\Request;
 
 class ShelfController extends Controller
@@ -49,9 +50,9 @@ class ShelfController extends Controller
             $validated = $request->validated();
             $segment = data_get($validated, 'segment');
             $layer = data_get($segment, 'layer');
-            if ($request->has('invert')) { 
+            if ($request->has('invert')) {
                 $segments = $request->get('segments', []);
-                foreach ($segments as $ordering => $segmentData) { 
+                foreach ($segments as $ordering => $segmentData) {
                     $segment = Segment::find(data_get($segmentData, 'id'));
                     if ($segment) {
                         $segment->update([
@@ -106,11 +107,22 @@ class ShelfController extends Controller
             'new_position' => 'nullable|integer|min:0',
         ]);
 
-        try { 
+        try {
+
+            $shelfService =  new ShelfPositioningService();
+            $position = $shelfService->findClosestHole(
+                data_get($validated, 'new_position', $shelf->shelf_position),
+                data_get($shelf->section, 'settings.holes', [])
+            );
+            $holeHeight = data_get($position, 'height', 0);
+            $holePosition = data_get($position, 'position', 0);
+            $scaledShelfHeight = $shelf->shelf_height;
+            $heightDifference = $scaledShelfHeight - $holeHeight;
+            $topPosition = $holePosition - $heightDifference / 2;
+
             // Atualiza a seção da prateleira
             $shelf->section_id = $validated['section_id'];
-            $shelf->shelf_position = $validated['new_position'] ?? $shelf->shelf_position;
-
+            $shelf->shelf_position =  $topPosition;
             $shelf->save();
 
             // Atualiza a num_shelves da seção
