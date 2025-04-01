@@ -1,3 +1,83 @@
+// Info.vue - Componente Principal
+<script setup lang="ts">
+// @ts-ignore
+import { Button } from '@/components/ui/button';
+// @ts-ignore
+import { ArrowLeftRight, Grid, Minus, Plus } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
+import Category from './Category.vue';
+import Popover from './Popover.vue';
+
+const props = defineProps({
+    record: {
+        type: Object,
+        required: true,
+    },
+    categories: {
+        type: Array,
+        default: () => [],
+    },
+    scaleFactor: {
+        type: Number,
+        default: 1,
+    },
+});
+
+const emit = defineEmits(['update:scaleFactor', 'update:showGrid', 'update:invertOrder', 'update:category']);
+
+// Estado local para filtros e opções de visualização
+const showGrid = ref(false);
+const filters = ref({
+    category: null,
+});
+
+// Computado para obter as seções do registro atual
+const sections = computed(() => {
+    return props.record.sections || [];
+});
+
+// Atualizar a escala e emitir o evento
+const updateScale = (newScale: number) => {
+    emit('update:scaleFactor', newScale, props.record.id);
+};
+
+// Atualizar a grade e emitir o evento
+const updateShowGrid = (newShowGrid) => {
+    showGrid.value = newShowGrid;
+    emit('update:showGrid', newShowGrid);
+};
+
+// Inverter a ordem das seções
+const invertOrder = () => {
+    emit('update:invertOrder', props.record.id);
+};
+
+// Atualizar a categoria selecionada
+const updateCategory = (category) => {
+    filters.value.category = category;
+    emit('update:category', category);
+};
+
+// Limpar todos os filtros
+const clearFilters = () => {
+    filters.value.category = null;
+    showGrid.value = false;
+
+    // Emitir eventos para atualizar o componente pai
+    emit('update:category', null);
+    emit('update:showGrid', false);
+};
+
+// Observar mudanças externas nos filtros
+watch(
+    () => props.scaleFactor,
+    (newValue) => {
+        // Atualizar a escala local se for alterada externamente
+    },
+    { immediate: true },
+);
+</script>
+
 <template>
     <div class="sticky top-0 z-50 border-b bg-white shadow-sm dark:bg-gray-800">
         <div class="p-4">
@@ -15,14 +95,12 @@
                         Dimensões da Gôndola
                     </h3>
 
-                     
-
                     <!-- Controle de Escala -->
                     <div class="flex items-center space-x-2">
                         <label class="text-sm text-gray-600 dark:text-gray-400">Escala:</label>
                         <div class="flex items-center space-x-2">
                             <Button
-                                type="buttom"
+                                type="button"
                                 variant="outline"
                                 size="icon"
                                 @click="updateScale(Math.max(2, scaleFactor - 1))"
@@ -33,7 +111,7 @@
                             </Button>
                             <span class="w-8 text-center text-sm font-medium text-gray-700 dark:text-gray-300">{{ scaleFactor }}x</span>
                             <Button
-                                type="buttom"
+                                type="button"
                                 variant="outline"
                                 size="icon"
                                 @click="updateScale(Math.min(10, scaleFactor + 1))"
@@ -50,17 +128,30 @@
                         type="button"
                         variant="outline"
                         size="icon"
-                        @click="showGrid = !showGrid"
+                        @click="updateShowGrid(!showGrid)"
                         class="ml-4 !p-1"
                         :class="{ 'bg-gray-100 dark:bg-gray-700': showGrid }"
                     >
                         <Grid class="h-4 w-4" />
                     </Button>
+                    <!-- Filtros -->
+                    <div class="flex items-center space-x-2" v-if="categories.length > 0">
+                        <label class="text-sm text-gray-600 dark:text-gray-400">Filtros:</label>
+                        <Popover @clear-filters="clearFilters" :has-active-filters="!!filters.category">
+                            <Category
+                                class="w-full"
+                                :categories="categories"
+                                v-model="filters.category"
+                                @update:model-value="updateCategory"
+                                :clearable="true"
+                            />
+                        </Popover>
+                    </div>
                 </div>
 
                 <!-- Botões agrupados -->
                 <div class="flex items-center space-x-3">
-                    <!-- Botão para abrir o drawer de produtos -->
+                    <!-- Botão para inverter ordem -->
                     <Button type="button" variant="secondary" v-if="sections.length > 0" @click="invertOrder" class="flex items-center">
                         <ArrowLeftRight class="mr-1 h-4 w-4" />
                         <span class="hidden md:block">Inverter Ordem</span>
@@ -75,36 +166,3 @@
         </div>
     </div>
 </template>
-<script setup lang="ts">
-// @ts-ignore
-import { Button } from '@/components/ui/button';
-// @ts-ignore
-import { Input } from '@/components/ui/input';
-import { ArrowLeftRight, Grid, Minus, Plus } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
-const props = defineProps({
-    record: {
-        type: Object,
-        required: true,
-    },
-    scaleFactor: {
-        type: Number,
-        default: 1,
-    },
-});
-const emit = defineEmits(['update:scaleFactor', 'update:showGrid', 'update:invertOrder']);
-const showGrid = ref(false);
-const sections = computed(() => {
-    return props.record.sections || [];
-});
-const updateScale = (newScale: number) => {
-    emit('update:scaleFactor', newScale, props.record.id);
-};
-
-const updateShowGrid = (newShowGrid) => {
-    emit('update:showGrid', newShowGrid);
-};
-const invertOrder = () => {
-    emit('update:invertOrder', props.record.id);
-};
-</script>

@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <Card>
                 <CardHeader class="pb-2">
                     <CardTitle class="text-sm font-medium">Tenant</CardTitle>
@@ -65,7 +65,7 @@
                     </div>
                 </CardContent>
             </Card>
-        </div> -->
+        </div>
     </div>
 </template>
 

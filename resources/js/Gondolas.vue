@@ -14,9 +14,11 @@
                 <TabsContent v-for="gondola in gondolas" :key="gondola.id" :value="gondola.id" class="mt-4">
                     <Info
                         :record="gondola"
+                        :categories="categories"
                         :scale-factor="gondola.scale_factor"
                         @update:scaleFactor="updateScaleFactor"
                         @update:invertOrder="updateInvertOrder"
+                        @update:category="updateCategory"
                     />
                     <div class="w-full flex-col gap-6 overflow-visible border md:flex-row">
                         <!-- Area de trabalho -->
@@ -24,6 +26,7 @@
                             <Sections
                                 :gondola="gondola"
                                 :scale-factor="gondola.scale_factor"
+                                :selected-category="selectedCategory"
                                 @sections-reordered="updateSections"
                                 @product-drop="handleProductDrop"
                                 @segment-select="handleSegmentSelected"
@@ -128,6 +131,11 @@ const selectedGondolaId = ref('');
 // Produto selecionado
 const selectedProducts = ref([]) as any;
 
+// Busca categorias disponíveis
+const categories = ref<any[]>([]);
+// Categoria selecionada
+const selectedCategory = ref<Record<string, any> | undefined | null>(undefined);
+
 const segments = ref<any[]>([]);
 // Inicializa o componente
 onMounted(() => {
@@ -149,8 +157,10 @@ function initializeSelectedGondola() {
 }
 
 // Manipula a seleção de um segmento
-function handleSegmentSelected(segment: any) {
-    console.log('Segmento selecionado:', segment.id);
+function handleSegmentSelected(segment: any) { 
+    if(!segment.category) {
+        selectedCategory.value = null;
+    }
     if (segment.isMultiSelect) {
         // Se a seleção for múltipla, adiciona o segmento à lista
         const index = segments.value.findIndex((s) => s.id === segment.id);
@@ -164,7 +174,7 @@ function handleSegmentSelected(segment: any) {
                 segments.value.splice(index, 1);
                 selectedProducts.value.splice(index, 1);
             }
-        } 
+        }
     } else {
         segments.value = [segment];
         selectedProducts.value = [segment.product];
@@ -268,6 +278,35 @@ const updateInvertOrder = (gondolaId) => {
         },
     );
 };
+
+// Observa mudanças nas categorias para garantir que sempre haja uma selecionada
+const updateCategory = (category) => {
+    // Atualiza a categoria selecionada
+
+    selectedCategory.value = category;
+    if (!category) {
+        segments.value = [];
+        selectedProducts.value = [];
+    }
+};
+
+/**
+ * Busca categorias disponíveis
+ */
+async function fetchCategories() {
+    try {
+        // @ts-ignore
+        const response = await window.axios.get(route('planogram.api.categories.index'));
+        categories.value = response.data;
+    } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+    }
+}
+
+onMounted(async () => {
+    // Carrega categorias e produtos ao montar o componente
+    await fetchCategories();
+});
 </script>
 
 <style scoped>

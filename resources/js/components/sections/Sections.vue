@@ -1,6 +1,6 @@
 <template>
-    <div class="flex w-full flex-col   bg-white shadow-sm   dark:bg-gray-800 md:flex-row">
-        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="flex w-full  md:flex-row mt-28 px-10">
+    <div class="flex w-full flex-col bg-white shadow-sm dark:bg-gray-800 md:flex-row">
+        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="mt-28 flex w-full px-10 md:flex-row">
             <template #item="{ element: section, index }">
                 <div class="flex items-center">
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" @delete-section="deleteSection">
@@ -12,9 +12,10 @@
                     </Gramalheira>
                     <Section
                         :section="section"
-                        :scale-factor="props.scaleFactor" 
+                        :scale-factor="props.scaleFactor"
+                        :selected-category="selectedCategory"
                         @move-shelf-to-section="handleMoveShelfToSection"
-                         @segment-select="$emit('segment-select', $event)"
+                        @segment-select="$emit('segment-select', $event)"
                     />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
@@ -32,8 +33,8 @@ import Section from './Section.vue';
 // @ts-ignore
 import { Button } from '@/components/ui/button';
 // @ts-ignore
-import draggable from 'vuedraggable';
 import { round } from 'lodash';
+import draggable from 'vuedraggable';
 
 const props = defineProps({
     gondola: {
@@ -43,6 +44,10 @@ const props = defineProps({
     scaleFactor: {
         type: Number,
         required: true,
+    },
+    selectedCategory: {
+        type: [Object, null],
+        default: null,
     },
 });
 
@@ -58,10 +63,10 @@ const sections = computed(() => {
 
 const lastSection = computed(() => {
     return sections.value[sections.value.length - 1];
-}); 
+});
 const isLastSection = (section) => {
     return section.id === lastSection.value.id;
-}; 
+};
 // Create a ref for sections so we can modify it with draggable
 const sortableSections = ref(sections.value);
 
@@ -90,24 +95,26 @@ const deleteSection = (section: any) => {
 };
 
 const handleMoveShelfToSection = (shelf: any, sectionId: number) => {
-    
-    // @ts-ignore
-    router.put(route('planogram.shelves.update-section', shelf.id), {
-        section_id: sectionId,
-        new_position: round(shelf.shelf_position),
-    }, {
-        preserveState: false,
-        preserveScroll: true,
-        onSuccess: () => {
-            // Handle success if needed
+    router.put(
+        // @ts-ignore
+        route('planogram.shelves.update-section', shelf.id),
+        {
+            section_id: sectionId,
+            new_position: round(shelf.shelf_position),
         },
-        onError: () => {
-            // Handle error if needed
+        {
+            preserveState: false,
+            preserveScroll: true,
+            onSuccess: () => {
+                // Handle success if needed
+            },
+            onError: () => {
+                // Handle error if needed
+            },
+            onFinish: () => {
+                // Reset the state if needed
+            },
         },
-        onFinish: () => {
-            // Reset the state if needed
-        },
-    });
+    );
 };
- 
 </script>

@@ -16,6 +16,7 @@
             :baseHeight="baseHeight"
             :numberOfShelves="sortableShelves.length"
             :currentIndex="index"
+            :selected-category="selectedCategory"
             @drop-product="onDropProduct"
             @click="$emit('select-shelf', shelf)"
             @segment-select="$emit('segment-select', $event)"
@@ -38,6 +39,10 @@ const props = defineProps({
     scaleFactor: {
         type: Number,
         required: true,
+    },
+    selectedCategory: {
+        type: [Object, null],
+        default: null,
     },
     showGrid: {
         type: Boolean,
@@ -132,6 +137,9 @@ const onDrop = (event: DragEvent) => {
 const onDragEnter = (event: DragEvent) => {
     // Previne o comportamento padrão para permitir o drop
     event.preventDefault();
+   if(event.dataTransfer?.types.includes('text/segment')) {
+       return;
+    }
     // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;
 
@@ -156,6 +164,9 @@ const onDragOver = (event: DragEvent) => {
     // Verifica se dataTransfer está disponível
     if (!event.dataTransfer) return;
 
+    if(event.dataTransfer?.types.includes('text/segment')) {
+       return;
+    }
     // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;
 

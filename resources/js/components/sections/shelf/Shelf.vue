@@ -1,21 +1,32 @@
 <!-- Versão atualizada do Shelf.vue para drag and drop -->
 <template>
     <div
-        class="shelf group relative border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800 flex  justify-around items-end"
+        class="shelf group relative flex items-end justify-around border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
         @click.stop="$emit('click', shelf)"
         ref="shelfRef"
     >
-        <Segment v-for="(segment, index) in shelf.segments" :key="index" :shelf="shelf" :segment="segment" :scale-factor="scaleFactor" @segment-select="$emit('segment-select', $event)"/>
+        <Segment
+            v-for="(segment, index) in shelf.segments"
+            :key="index"
+            :shelf="shelf"
+            :segment="segment"
+            :scale-factor="scaleFactor"
+            :selected-category="selectedCategory"
+            @segment-select="$emit('segment-select', $event)"
+        />
         <!-- Area de soltar produto -->
-        <div class="absolute inset-0 bottom-0 z-0 rounded-md bg-gray-200/25" :style="dragStyle"
-        draggable="true"
-        @dragstart="onDragstart"
-        @dragend="onDragend"
-        @drop.prevent="onDrop"
-        @dragenter="onDragEnter"
-        @dragleave="onDragLeave">
+        <div
+            class="absolute inset-0 bottom-0 z-0 rounded-md bg-gray-200/25"
+            :style="dragStyle"
+            draggable="true"
+            @dragstart="onDragstart"
+            @dragend="onDragend"
+            @drop.prevent="onDrop"
+            @dragenter="onDragEnter"
+            @dragleave="onDragLeave"
+        >
             <div class="absolute inset-0 flex items-center justify-center" v-if="draggingProduct">
                 <span class="text-lg text-gray-100">Solte aqui</span>
             </div>
@@ -55,6 +66,10 @@ const props = defineProps({
     currentIndex: {
         type: Number,
         default: 0,
+    },
+    selectedCategory: {
+        type: [Object, null],
+        default: null,
     },
     holes: {
         type: Array,
@@ -166,6 +181,26 @@ const onDragstart = (event) => {
     event.target.style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
     event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
     event.dataTransfer.setData('text/shelf', JSON.stringify(props.shelf));
+    // Vamos criar um ghost para o arraste da prateleira
+    const ghost = document.createElement('div');
+    ghost.className = 'shelf-drag-handle';
+    ghost.style.width = `${props.sectionWidth * props.scaleFactor}px`;
+    ghost.style.height = `${props.shelf.shelf_height * props.scaleFactor}px`;
+    ghost.style.backgroundColor = 'rgba(59, 130, 246, 0.5)';
+    ghost.style.position = 'absolute';
+    ghost.style.top = '0';
+    ghost.style.left = '-50%';
+    ghost.style.zIndex = '10';
+    ghost.style.pointerEvents = 'none'; // Desabilita eventos de ponteiro
+    ghost.style.opacity = '0.5'; // Diminui a opacidade do ghost
+    ghost.style.borderRadius = '8px'; // Adiciona borda arredondada
+    ghost.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.5)'; // Adiciona sombra
+    ghost.style.transition = 'all 0.2s ease'; // Adiciona transição suave
+    document.body.appendChild(ghost); // Adiciona o ghost ao body
+    event.dataTransfer.setDragImage(ghost, 0, 0); // Define o ghost como imagem de arraste
+    setTimeout(() => {
+        ghost.remove(); // Remove o ghost após o arraste
+    }, 0);
 };
 // Função chamada quando o drag termina
 const onDragend = (event) => {
