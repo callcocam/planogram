@@ -1,5 +1,5 @@
 <template>
-    <div class="segment flex items-end " :style="layerStyle">
+    <div class="segment flex items-end  group" :style="layerStyle">
         <Product
             v-for="(quantity, index) in layerQuantity"
             :key="index"

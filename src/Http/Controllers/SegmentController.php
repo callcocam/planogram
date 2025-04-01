@@ -98,6 +98,37 @@ class SegmentController extends Controller
         }
     }
 
+    public function updateReorder(Request $request, Shelf $shelf)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'segments' => 'required|array',
+                'segments.*.id' => 'required|exists:segments,id',
+                'segments.*.ordering' => 'required|integer',
+            ]);
+            foreach ($request->segments as $ordring => $segmentData) {
+                $segment = Segment::find($segmentData['id']);
+                if ($segment) { 
+                    $segment->update(['ordering' => $segmentData['ordering']]);
+                }
+            }
+            DB::commit();
+            $gondola = $shelf->section->gondola;
+            if (!$gondola) {
+                return redirect()->back()->with('error', 'Gôndola não encontrada');
+            }
+            return  redirect()->route('planograms.show', [
+                'planogram' => $gondola->planogram_id,
+                'gondola' => $gondola->id,
+            ])->with('success', 'Segmentos reordenados com sucesso');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Erro ao reordenar segmentos: ' . $e->getMessage());
+        }
+    }
+
+
     /**
      * Atualiza a prateleira de um segmento
      * 

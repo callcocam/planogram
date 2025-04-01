@@ -17,9 +17,10 @@
             :numberOfShelves="sortableShelves.length"
             :currentIndex="index"
             :selected-category="selectedCategory"
-            @drop-product="onDropProduct"
+            @drop:product="onDropProduct"
             @click="$emit('select-shelf', shelf)"
             @segment-select="$emit('segment-select', $event)"
+            @update:segments="$emit('update-shelves', $event)"
         >
         </Shelf>
     </div>

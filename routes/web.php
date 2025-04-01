@@ -26,11 +26,11 @@ Route::middleware(['auth', 'verified', 'web'])
 
         Route::put('/shelves/{shelf}/section', [\Callcocam\Planogram\Http\Controllers\ShelfController::class, 'updateSection'])->name('shelves.update-section');
 
-        Route::resource('segments', \Callcocam\Planogram\Http\Controllers\SegmentController::class)
-            ->names('segments');
+        Route::resource('segments', \Callcocam\Planogram\Http\Controllers\SegmentController::class)->names('segments');
+
+        Route::put('segments/{shelf}/reorder', [\Callcocam\Planogram\Http\Controllers\SegmentController::class, 'updateReorder'])->name('segments.reorder');
 
         Route::put('/segments/{segment}/shelf', [\Callcocam\Planogram\Http\Controllers\SegmentController::class, 'shelfUpdate'])->name('segments.shelf-update');
 
-        Route::resource('layers', \Callcocam\Planogram\Http\Controllers\LayerController::class)
-            ->names('layers');
+        Route::resource('layers', \Callcocam\Planogram\Http\Controllers\LayerController::class)->names('layers');
     });

@@ -1,12 +1,16 @@
 <template>
-    <div 
-        class="segment relative flex items-end" 
-        :style="segmentStyle" 
-        @click="segmentClick" 
+    <div
+        class="segment group relative flex cursor-pointer items-end drag-handle border-2"
+        :style="segmentStyle"
+        @click="segmentClick"
         @dragstart="onDragstart"
         @dragend="onDragend"
         ref="segmentRef"
+        draggable="true"
     >
+        <!-- Botão de mover que aparece no hover (serve como alça de arraste) -->
+        
+
         <Layer
             v-for="(quantity, index) in segmentQuantity"
             :key="index"
@@ -19,9 +23,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { MoveIcon } from 'lucide-vue-next';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Layer from './Layer.vue';
-import { on } from 'events';
 
 // ----------------------------------------------------
 // Props e Emits
@@ -45,7 +49,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['segment-select']);
+const emit = defineEmits(['segment-select', 'segment-drag']);
 
 // ----------------------------------------------------
 // Estado do componente
@@ -66,17 +70,17 @@ const SEGMENT_SELECTED_EVENT = 'segment-selected';
 // Propriedades computadas
 // ----------------------------------------------------
 /**
- * Retorna a quantidade de segmentos e gerencia o estado de seleção 
+ * Retorna a quantidade de segmentos e gerencia o estado de seleção
  * com base na categoria selecionada
  */
 const segmentQuantity = computed(() => {
     // Verifica se existe uma categoria selecionada
     if (props.selectedCategory) {
         const isCategoryMatch = props.segment.layer.product.category_id === props.selectedCategory.id;
-        
+
         // Atualiza o estado de seleção do segmento
         segmentSelected.value = isCategoryMatch;
-        
+
         // Emite evento de seleção para o componente pai
         emit('segment-select', {
             ...props.segment,
@@ -85,11 +89,10 @@ const segmentQuantity = computed(() => {
             segmentSelected: isCategoryMatch,
             category: true,
         });
-    }else{
+    } else {
         // Se não houver categoria selecionada, mantém o estado de seleção atual
-        segmentSelected.value = false;
     }
-    
+
     return props.segment.quantity;
 });
 
@@ -102,10 +105,12 @@ const segmentStyle = computed(() => {
     const layerWidth = props.segment.layer.product.width * props.shelf.quantity * props.scaleFactor;
 
     // Estilo condicional quando o segmento está selecionado
-    const selectedStyle = segmentSelected.value ? {
-        border: '2px solid blue',
-        boxShadow: '0 0 5px rgba(0, 0, 255, 0.5)',
-    } : {};
+    const selectedStyle = segmentSelected.value
+        ? {
+              border: '2px solid blue',
+              boxShadow: '0 0 5px rgba(0, 0, 255, 0.5)',
+          }
+        : {};
 
     // Retorna o estilo completo
     return {
@@ -151,12 +156,42 @@ const segmentClick = (event) => {
  * @param {DragEvent} event - O evento de arraste
  */
 const onDragstart = (event) => {
+    // Configure o dataTransfer para transferir os dados do segmento
     event.dataTransfer.setData('text/segment', JSON.stringify(props.segment));
     event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.dropEffect = 'move';
+
+    // Aplicar estilos visuais durante o arrasto
     if (segmentRef.value) {
-        segmentRef.value.style.opacity = '0.5'; // Diminui a opacidade do segmento arrastado
-        segmentRef.value.style.zIndex = '10'; // Aumenta o z-index do segmento arrastado
+        segmentRef.value.style.opacity = '0.5';
+        segmentRef.value.style.zIndex = '10';
+    }
+
+    // Emitir evento para o componente pai
+    emit('segment-drag', {
+        segment: props.segment,
+        action: 'start',
+    });
+
+    // Criar uma imagem de arrasto personalizada (opcional)
+    try {
+        const rect = segmentRef.value.getBoundingClientRect();
+        const ghostEl = document.createElement('div');
+        ghostEl.style.width = `${rect.width}px`;
+        ghostEl.style.height = `${rect.height}px`;
+        ghostEl.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+        ghostEl.style.borderRadius = '4px';
+        ghostEl.style.position = 'absolute';
+        ghostEl.style.top = '-1000px';
+        ghostEl.style.left = '-1000px';
+
+        document.body.appendChild(ghostEl);
+        event.dataTransfer.setDragImage(ghostEl, 20, 20);
+
+        setTimeout(() => {
+            document.body.removeChild(ghostEl);
+        }, 0);
+    } catch (error) {
+        console.error('Erro ao criar imagem de arrasto:', error);
     }
 };
 
@@ -165,12 +200,20 @@ const onDragstart = (event) => {
  * @param {DragEvent} event - O evento de arraste
  */
 const onDragend = (event) => {
+    // Restaurar estilos visuais
     if (segmentRef.value) {
-        segmentRef.value.style.opacity = '1'; // Restaura a opacidade do segmento
-        segmentRef.value.style.zIndex = '1'; // Restaura o z-index do segmento
+        segmentRef.value.style.opacity = '1';
+        segmentRef.value.style.zIndex = '1';
     }
+
+    // Limpar os dados de transferência
     event.dataTransfer.clearData();
-    event.dataTransfer.dropEffect = 'none';
+
+    // Emitir evento para o componente pai
+    emit('segment-drag', {
+        segment: props.segment,
+        action: 'end',
+    });
 };
 
 /**
@@ -184,7 +227,7 @@ const notifyOtherSegments = (isMultiSelect) => {
             isMultiSelect: isMultiSelect,
         },
     });
-    
+
     window.dispatchEvent(customEvent);
 };
 
@@ -220,10 +263,7 @@ const handleSegmentSelection = (selectedId, isMultiSelect) => {
  */
 const segmentSelectionHandler = (e) => {
     const customEvent = e as CustomEvent;
-    handleSegmentSelection(
-        customEvent.detail.segmentId, 
-        customEvent.detail.isMultiSelect
-    );
+    handleSegmentSelection(customEvent.detail.segmentId, customEvent.detail.isMultiSelect);
 };
 
 // ----------------------------------------------------
@@ -239,3 +279,17 @@ onUnmounted(() => {
     window.removeEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
 });
 </script>
+
+<style scoped>
+.segment {
+    transition: all 0.2s ease;
+}
+
+.segment:hover {
+    z-index: 5;
+}
+
+.drag-handle {
+    touch-action: none;
+}
+</style>

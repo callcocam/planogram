@@ -1,21 +1,34 @@
-<!-- Versão atualizada do Shelf.vue para drag and drop -->
+<!-- Versão atualizada do Shelf.vue para drag and drop com correção da ordenação -->
 <template>
     <div
-        class="shelf group relative flex items-end justify-around border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
+        class="shelf relative flex items-end justify-stretch border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
-        @click.stop="$emit('click', shelf)"
         ref="shelfRef"
     >
-        <Segment
-            v-for="(segment, index) in shelf.segments"
-            :key="index"
-            :shelf="shelf"
-            :segment="segment"
-            :scale-factor="scaleFactor"
-            :selected-category="selectedCategory"
-            @segment-select="$emit('segment-select', $event)"
-        />
+        <!-- Implementação do draggable para os segmentos -->
+        <draggable
+            v-model="sortableSegments"
+            item-key="id"
+            handle=".drag-handle"
+            @end="onSegmentDragEnd"
+            class="relative flex w-full items-end justify-start px-4"
+            :style="segmentsContainerStyle"
+            :component-data="{ type: 'transition-group' }"
+        >
+            <template #item="{ element }">
+                <Segment
+                    :key="element.id"
+                    :shelf="shelf"
+                    :segment="element"
+                    :scale-factor="scaleFactor"
+                    :selected-category="selectedCategory"
+                    @segment-select="$emit('segment-select', $event)"
+                    @segment-drag="handleSegmentDrag"
+                />
+            </template>
+        </draggable>
+
         <!-- Area de soltar produto -->
         <div
             class="absolute inset-0 bottom-0 z-0 rounded-md bg-gray-200/25"
@@ -35,7 +48,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import draggable from 'vuedraggable';
 import Segment from './segment/Segment.vue';
 
 const props = defineProps({
@@ -77,11 +91,55 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['click', 'drop-product', 'segment-select']);
+const emit = defineEmits(['click', 'drop:product', 'segment-select', 'update:segments']);
 
 const draggingProduct = ref(false);
-
 const shelfRef = ref(null);
+
+// Garantir que todos os segmentos tenham IDs
+const ensureSegmentIds = (segments) => {
+    return segments.map((segment, index) => ({
+        ...segment,
+        id: segment.id || `segment-${Date.now()}-${index}`,
+    }));
+};
+
+// Referência local aos segmentos para o draggable
+const sortableSegments = computed({
+    get() {
+        // Garantir que todos os segmentos tenham IDs
+        return ensureSegmentIds(props.shelf.segments || []);
+    },
+    set(newSegments) {
+        // Garantir que a ordenação está atualizada antes de emitir o evento
+        const reorderedSegments = newSegments.map((segment, index) => ({
+            ...segment,
+            ordering: index + 1,
+        }));
+
+        // Emitir o evento para atualizar os segmentos no componente pai
+        emit('update:segments', {
+            shelfId: props.shelf.id,
+            segments: reorderedSegments,
+        });
+    },
+});
+
+// Debug: Monitorar as mudanças nos segmentos
+watch(
+    () => sortableSegments.value,
+    (newSegments) => {
+        console.log('Segmentos atualizados:', newSegments.map((s) => `${s.id} (${s.ordering})`).join(', '));
+    },
+    { deep: true },
+);
+
+// Computed property para estilo do container de segmentos
+const segmentsContainerStyle = computed(() => {
+    return {
+        height: `${props.shelf.shelf_height * props.scaleFactor}px`,
+    };
+});
 
 // Computed property para calcular o estilo da prateleira, incluindo posicionamento
 const shelfStyle = computed(() => {
@@ -120,17 +178,66 @@ const dragStyle = computed(() => {
     };
 });
 
+// Tratar eventos de arrasto do segmento
+const handleSegmentDrag = (eventData) => {
+    // Você pode usar isso para rastreamento ou lógica adicional
+    console.log(`Segmento ${eventData.segment.id} ${eventData.action}`);
+};
+
+// Função para lidar com o fim do arraste de segmentos
+const onSegmentDragEnd = (event) => {
+    console.log('Drag end event:', event);
+
+    // Se não houver mudança na ordem, não fazemos nada
+    if (!event.moved) {
+        console.log('Sem alteração na ordem');
+        return;
+    }
+
+    // Aqui temos certeza que a ordem mudou
+    const oldIndex = event.moved.oldIndex;
+    const newIndex = event.moved.newIndex;
+    console.log(`Movido de ${oldIndex} para ${newIndex}`);
+
+    // A reordenação já foi aplicada ao v-model (sortableSegments),
+    // mas precisamos garantir que o campo ordering reflita a nova ordem
+    const reorderedSegments = sortableSegments.value.map((segment, index) => ({
+        ...segment,
+        ordering: index + 1,
+    }));
+
+    // Emitir evento com os segmentos reordenados
+    emit('update:segments', {
+        shelfId: props.shelf.id,
+        segments: reorderedSegments,
+    });
+};
+
 // Função chamada quando o produto é solto na prateleira
 const onDrop = (event) => {
     draggingProduct.value = false; // Restaura o estado de arraste
+
+    // Verificar se temos um produto ou um segmento sendo solto
     const productData = event.dataTransfer.getData('text/product');
+    const segmentData = event.dataTransfer.getData('text/segment');
+
     if (productData) {
+        handleProductDrop(productData);
+    } else if (segmentData) {
+        handleSegmentDrop(segmentData);
+    }
+};
+
+// Função para lidar com a soltura de um produto
+const handleProductDrop = (productData) => {
+    try {
         const product = JSON.parse(productData);
         // Verifica se o produto é válido
         if (product && product.id) {
             const newSegment = {
+                id: `segment-${Date.now()}`,
                 width: parseInt(props.sectionWidth),
-                ordering: (props.shelf.segments?.length || 0) + 1,
+                ordering: (sortableSegments.value.length || 0) + 1,
                 quantity: 1,
                 spacing: 0,
                 position: 0,
@@ -142,6 +249,7 @@ const onDrop = (event) => {
                     product_id: product.id,
                     product_name: product.name,
                     product_image: product.image,
+                    product: product,
                     height: product.height,
                     spacing: 0,
                     quantity: 1,
@@ -149,25 +257,78 @@ const onDrop = (event) => {
                 },
             };
 
-            // Update the shelf with the new segment
-            const updatedShelf = {
+            // Emite o evento com os segmentos atualizados
+            emit('drop:product', {
                 ...props.shelf,
                 segment: newSegment,
-            };
-            // Emite o evento com o produto e a prateleira
-            emit('drop-product', updatedShelf);
+            });
         }
+    } catch (error) {
+        console.error('Erro ao processar produto:', error);
+    }
+};
+
+// Função para lidar com a soltura de um segmento
+const handleSegmentDrop = (segmentData) => {
+    try {
+        const segment = JSON.parse(segmentData);
+        // Verificar se o segmento já existe nesta prateleira
+        const existingIndex = sortableSegments.value.findIndex((s) => s.id === segment.id);
+
+        if (existingIndex >= 0) {
+            // O segmento já existe, atualizar apenas sua ordem
+            const updatedSegments = [...sortableSegments.value];
+            updatedSegments[existingIndex] = {
+                ...segment,
+                ordering: existingIndex + 1,
+            };
+
+            // Reordena todos os segmentos corretamente
+            const reorderedSegments = updatedSegments.map((seg, idx) => ({
+                ...seg,
+                ordering: idx + 1,
+            }));
+
+            emit('update:segments', {
+                shelfId: props.shelf.id,
+                segments: reorderedSegments,
+            });
+        } else {
+            // Adicionar o segmento a esta prateleira
+            const newSegment = {
+                ...segment,
+                id: segment.id || `segment-${Date.now()}`,
+                ordering: (sortableSegments.value.length || 0) + 1,
+            };
+
+            // Adiciona o novo segmento à lista existente
+            const updatedSegments = [...sortableSegments.value, newSegment];
+
+            // Reordena todos os segmentos corretamente
+            const reorderedSegments = updatedSegments.map((seg, idx) => ({
+                ...seg,
+                ordering: idx + 1,
+            }));
+
+            emit('update:segments', {
+                shelfId: props.shelf.id,
+                segments: reorderedSegments,
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao processar segmento:', error);
     }
 };
 
 // Função chamada quando o mouse entra na área de soltar
 const onDragEnter = (event) => {
-    if (event.dataTransfer.types.includes('text/product')) {
+    if (event.dataTransfer.types.includes('text/product') || event.dataTransfer.types.includes('text/segment')) {
         draggingProduct.value = true; // Define o estado de arraste
         event.preventDefault(); // Previne o comportamento padrão
         event.target.style.borderColor = 'rgba(59, 130, 246, 0.5)'; // Altera a cor da borda
     }
 };
+
 // Função chamada quando o mouse sai da área de soltar
 const onDragLeave = (event) => {
     if (!shelfRef.value.contains(event.relatedTarget)) {
@@ -202,6 +363,7 @@ const onDragstart = (event) => {
         ghost.remove(); // Remove o ghost após o arraste
     }, 0);
 };
+
 // Função chamada quando o drag termina
 const onDragend = (event) => {
     draggingProduct.value = false; // Restaura o estado de arraste
@@ -262,6 +424,10 @@ const onDragend = (event) => {
     cursor: grabbing;
 }
 
+.drag-handle {
+    cursor: move;
+}
+
 :global(.dark) .shelf-drag-handle {
     background-color: rgba(0, 0, 0, 0.5);
 }
@@ -278,5 +444,30 @@ const onDragend = (event) => {
 
 :global(.dark) .product-indicator {
     background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para visualização do draggable */
+.ghost {
+    opacity: 0.5;
+    background: #c8ebfb;
+}
+
+.flip-list-move {
+    transition: transform 0.5s;
+}
+
+.no-move {
+    transition: transform 0s;
+}
+
+.flip-list-enter-active,
+.flip-list-leave-active {
+    transition: all 0.5s;
+}
+
+.flip-list-enter-from,
+.flip-list-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
 }
 </style>
