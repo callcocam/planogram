@@ -12,7 +12,7 @@
             item-key="id"
             handle=".drag-handle"
             @end="onSegmentDragEnd"
-            class="relative flex w-full items-end justify-start px-4"
+            class="relative flex w-full items-end justify-around px-4"
             :style="segmentsContainerStyle"
             :component-data="{ type: 'transition-group' }"
         >
