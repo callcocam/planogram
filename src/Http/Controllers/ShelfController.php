@@ -49,7 +49,7 @@ class ShelfController extends Controller
         try {
             $validated = $request->validated();
             $segment = data_get($validated, 'segment');
-            $layer = data_get($segment, 'layer');
+            $layer = data_get($segment, 'layer'); 
             if ($request->has('invert')) {
                 $segments = $request->get('segments', []);
                 foreach ($segments as $ordering => $segmentData) {

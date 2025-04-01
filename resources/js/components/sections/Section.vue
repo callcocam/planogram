@@ -1,5 +1,12 @@
 <template>
-    <div :style="sectionStyle" @drop.prevent="onDrop" @dragover.prevent="onDragOver" :data-section-id="section.id" @dragleave="onDragleave">
+    <div
+        :style="sectionStyle"
+        @drop.prevent="onDrop"
+        @dragover.prevent="onDragOver"
+        :data-section-id="section.id"
+        @dragleave="onDragleave"
+        @dragenter="onDragEnter"
+    >
         <Shelf
             v-for="(shelf, index) in sortableShelves"
             :shelf="shelf"
@@ -9,13 +16,16 @@
             :baseHeight="baseHeight"
             :numberOfShelves="sortableShelves.length"
             :currentIndex="index"
+            @drop-product="onDropProduct"
             @click="$emit('select-shelf', shelf)"
+            @segment-select="$emit('segment-select', $event)"
         >
         </Shelf>
     </div>
 </template>
 
 <script setup lang="ts">
+import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import Shelf from './shelf/Shelf.vue';
 // @ts-ignore
@@ -35,10 +45,12 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section']);
+const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section', 'segment-select']);
 
 // Criar ref para prateleiras que podemos modificar com draggable
 const sortableShelves = ref<any[]>([]);
+
+const draggingSection = ref(false);
 
 // Inicializar e atualizar sortableShelves quando props.section.shelves mudar
 watch(
@@ -59,6 +71,10 @@ const sectionStyle = computed(() => {
         height: `${props.section.height * props.scaleFactor}px`,
         position: 'relative' as const,
         overflow: 'hidden',
+        borderWidth: '2px',
+        borderStyle: draggingSection.value ? 'dashed' : 'solid',
+        borderColor: draggingSection.value ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
+        backgroundColor: draggingSection.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
     };
 });
 
@@ -70,10 +86,10 @@ const baseHeight = computed(() => {
 });
 
 const onDrop = (event: DragEvent) => {
-    const jsonDataShelf = event.dataTransfer?.getData('text/shelf') as any; 
+    const jsonDataShelf = event.dataTransfer?.getData('text/shelf') as any;
     if (jsonDataShelf) {
         try {
-            const data = JSON.parse(jsonDataShelf); 
+            const data = JSON.parse(jsonDataShelf);
             // Obter a posição do mouse em relação à janela
             const mouseX = event.clientX;
             const mouseY = event.clientY;
@@ -105,8 +121,29 @@ const onDrop = (event: DragEvent) => {
     }
 
     // Remove a classe CSS quando o mouse sai da seção
+    // const target = event.currentTarget as HTMLElement;
+    draggingSection.value = false;
+};
+
+/**
+ * Gerencia o evento quando um item é arrastado para a seção
+ * @param event - O evento de arrastar (DragEvent)
+ */
+const onDragEnter = (event: DragEvent) => {
+    // Previne o comportamento padrão para permitir o drop
+    event.preventDefault();
+    // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;
-    target.classList.remove('drag-over');
+
+    // Se já tiver a classe drag-over, não faz nada
+    if (target.classList.contains('drag-over')) return;
+    if (draggingSection.value) return;
+    // Verifica se dataTransfer está disponível
+    draggingSection.value = true;
+
+    // Adiciona a classe CSS para feedback visual
+    // target.classList.add('drag-over');
+    // Registra informações para depuração
 };
 /**
  * Gerencia o evento quando um item está sendo arrastado sobre a seção
@@ -124,17 +161,15 @@ const onDragOver = (event: DragEvent) => {
 
     // Se já tiver a classe drag-over, não faz nada
     if (target.classList.contains('drag-over')) return;
-
-    // Obtém a posição do mouse e do elemento para cálculos futuros
-    const mouseY = event.clientY;
-    const targetRect = target.getBoundingClientRect();
+    if (draggingSection.value) return;
 
     // Registra informações para depuração
     // console.log('Posição da seção:', targetRect);
     // console.log('Evento de arrastar ativado na posição Y:', mouseY);
 
     // Adiciona a classe CSS para feedback visual
-    target.classList.add('drag-over');
+    draggingSection.value = true;
+    // target.classList.add('drag-over');
 };
 
 /**
@@ -144,9 +179,40 @@ const onDragOver = (event: DragEvent) => {
 const onDragleave = (event: MouseEvent) => {
     // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;
-
     // Remove a classe CSS de feedback visual
-    target.classList.remove('drag-over');
+    // target.classList.remove('drag-over');
+    draggingSection.value = false;
+};
+
+/**
+ * Gerencia o evento de drop de um produto na seção
+ * @param product - O produto a ser adicionado
+ */
+const onDropProduct = (data: any) => {
+    // Adiciona o produto à seção
+    console.log('Produto adicionado à seção:', data);
+    // Remove a classe CSS quando o mouse sai da seção
+    // const target = event.currentTarget as HTMLElement;
+    draggingSection.value = false;
+    // target.classList.remove('drag-over');
+    router.put(
+        // @ts-ignore
+        route('planogram.shelves.update', data.id),
+        data,
+        {
+            preserveState: false,
+            preserveScroll: true,
+            onSuccess: () => {
+                // Handle success if needed
+            },
+            onError: () => {
+                // Handle error if needed
+            },
+            onFinish: () => {
+                // Reset the state if needed
+            },
+        },
+    );
 };
 </script>
 

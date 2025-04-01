@@ -1,6 +1,6 @@
 <template>
-    <div class="flex w-full flex-col   bg-white shadow-sm   dark:bg-gray-800 md:flex-row mt-28">
-        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="flex w-full  md:flex-row">
+    <div class="flex w-full flex-col   bg-white shadow-sm   dark:bg-gray-800 md:flex-row">
+        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="flex w-full  md:flex-row mt-28 px-10">
             <template #item="{ element: section, index }">
                 <div class="flex items-center">
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" @delete-section="deleteSection">
@@ -14,6 +14,7 @@
                         :section="section"
                         :scale-factor="props.scaleFactor" 
                         @move-shelf-to-section="handleMoveShelfToSection"
+                         @segment-select="$emit('segment-select', $event)"
                     />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
@@ -45,7 +46,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['sections-reordered', 'shelves-updated']);
+const emit = defineEmits(['sections-reordered', 'shelves-updated', 'move-shelf-to-section', 'segment-select']);
 
 const planogram = computed(() => {
     return props.gondola.planogram;

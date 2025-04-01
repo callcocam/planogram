@@ -22,9 +22,7 @@ class Layer extends Model
         'segment_id',
         'product_id',
         'height',
-        'quantity',
-        'spacing',
-        'ordering',
+        'quantity',  
         'status',
         'settings',
     ];

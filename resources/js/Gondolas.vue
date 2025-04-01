@@ -26,6 +26,7 @@
                                 :scale-factor="gondola.scale_factor"
                                 @sections-reordered="updateSections"
                                 @product-drop="handleProductDrop"
+                                @segment-select="handleSegmentSelected"
                             />
                         </MovableContainer>
                     </div>
@@ -62,10 +63,17 @@
             <div class="border-b border-gray-200 bg-white p-3">
                 <h3 class="text-center text-lg font-medium text-gray-800">Propriedades</h3>
             </div>
-            <!-- <div class="flex-1 p-3">
-                <div v-if="selectedProduct" class="rounded-md bg-white p-3 shadow-sm">
-                    <h4 class="font-medium text-gray-800">{{ selectedProduct.name }}</h4>
-                    <div class="mt-3 space-y-2 text-sm">
+            <div class="flex-1 p-3">
+                <div v-if="selectedProducts.length" class="rounded-md bg-white p-3 shadow-sm">
+                    {{ selectedProducts.length }} produto(s) selecionado(s)
+                    <div v-for="product in selectedProducts" :key="product.id" class="flex items-center gap-2">
+                        <img :src="product.image_url" alt="" class="h-16 w-16 rounded-md object-cover" />
+                        <div class="flex flex-col">
+                            <h4 class="text-sm font-medium text-gray-800">{{ product.name }}</h4>
+                            <p class="text-xs text-gray-500">SKU: {{ product.sku }}</p>
+                        </div>
+                    </div>
+                    <!--<div class="mt-3 space-y-2 text-sm">
                         <p class="flex items-center text-gray-600">
                             <RulerIcon class="mr-2 h-4 w-4 text-gray-400" />
                             <span>{{ selectedProduct.dimensions || '10×15×5 cm' }}</span>
@@ -78,12 +86,12 @@
                             <ScaleIcon class="mr-2 h-4 w-4 text-gray-400" />
                             <span>Peso: {{ selectedProduct.weight || '250g' }}</span>
                         </p>
-                    </div>
+                    </div> -->
                 </div>
                 <div v-else class="flex h-full items-center justify-center p-4 text-center text-gray-400">
                     Selecione um produto para ver suas propriedades
                 </div>
-            </div> -->
+            </div>
         </div>
     </div>
 </template>
@@ -94,7 +102,7 @@ import { Button } from '@/components/ui/button';
 // @ts-ignore
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router } from '@inertiajs/vue3';
-import { Barcode as BarcodeIcon, PlusIcon, Ruler as RulerIcon, Scale as ScaleIcon, ShoppingBagIcon } from 'lucide-vue-next';
+import { PlusIcon, ShoppingBagIcon } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import Info from './components/gondola/Info.vue';
 import Products from './components/products/Products.vue';
@@ -118,8 +126,9 @@ const gondolas = computed(() => {
 // ID da gôndola selecionada
 const selectedGondolaId = ref('');
 // Produto selecionado
-const selectedProduct = ref(null);
+const selectedProducts = ref([]) as any;
 
+const segments = ref<any[]>([]);
 // Inicializa o componente
 onMounted(() => {
     initializeSelectedGondola();
@@ -139,16 +148,40 @@ function initializeSelectedGondola() {
     }
 }
 
+// Manipula a seleção de um segmento
+function handleSegmentSelected(segment: any) {
+    console.log('Segmento selecionado:', segment.id);
+    if (segment.isMultiSelect) {
+        // Se a seleção for múltipla, adiciona o segmento à lista
+        const index = segments.value.findIndex((s) => s.id === segment.id);
+        if (segment.segmentSelected) {
+            if (index === -1) {
+                segments.value.push(segment);
+                selectedProducts.value.push(segment.product);
+            }
+        } else {
+            if (index !== -1) {
+                segments.value.splice(index, 1);
+                selectedProducts.value.splice(index, 1);
+            }
+        } 
+    } else {
+        segments.value = [segment];
+        selectedProducts.value = [segment.product];
+    }
+    // Implementação futura - exibir detalhes do segmento
+}
+
 // Manipula a seleção de um produto
 function handleProductSelect(product) {
-    selectedProduct.value = product;
     console.log('Produto selecionado:', product);
 }
 
 // Manipula o início do arrasto de um produto
 function handleDragStart(event, product) {
+    // console.log('Iniciando arrasto de produto:', event );
     // Esta função recebe o evento do componente Products
-    console.log('Iniciando arrasto de produto:', product);
+    // console.log('Iniciando arrasto de produto:', product);
 }
 
 // Manipula o drop de um produto em uma seção

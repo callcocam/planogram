@@ -23,14 +23,13 @@ class Segment extends Model
         'width',
         'ordering',
         'position',
-        'quantity',
-        'spacing',
+        'quantity', 
         'status',
     ];
 
     public function layer()
     {
-        return $this->hasOne(Layer::class)->orderBy('ordering');
+        return $this->hasOne(Layer::class) ;
     }
 
     public function shelf()

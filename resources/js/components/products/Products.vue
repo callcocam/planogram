@@ -127,8 +127,7 @@ const emit = defineEmits(['select-product', 'drag-start', 'view-stats']);
 
 // Estado
 const showFilters = ref(false);
-const loading = ref(false);
-const products = ref([]);
+const loading = ref(false); 
 const filters = ref({
     search: '',
     category: null,
@@ -155,9 +154,9 @@ function handleProductSelect(product) {
     emit('select-product', product);
 }
 
-function handleDragStart(event, product) {
-    event.dataTransfer.setData('application/json', JSON.stringify(product));
-    event.dataTransfer.effectAllowed = 'copy';
+function handleDragStart(event, product) { 
+    event.dataTransfer.setData('text/product', JSON.stringify(product));
+    event.dataTransfer.effectAllowed = 'copy'; 
     emit('drag-start', event, product);
 }
 
