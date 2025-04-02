@@ -75,21 +75,7 @@
                             <h4 class="text-sm font-medium text-gray-800">{{ product.name }}</h4>
                             <p class="text-xs text-gray-500">SKU: {{ product.sku }}</p>
                         </div>
-                    </div>
-                    <!--<div class="mt-3 space-y-2 text-sm">
-                        <p class="flex items-center text-gray-600">
-                            <RulerIcon class="mr-2 h-4 w-4 text-gray-400" />
-                            <span>{{ selectedProduct.dimensions || '10×15×5 cm' }}</span>
-                        </p>
-                        <p v-if="selectedProduct.sku" class="flex items-center text-gray-600">
-                            <BarcodeIcon class="mr-2 h-4 w-4 text-gray-400" />
-                            <span>SKU: {{ selectedProduct.sku }}</span>
-                        </p>
-                        <p class="flex items-center text-gray-600">
-                            <ScaleIcon class="mr-2 h-4 w-4 text-gray-400" />
-                            <span>Peso: {{ selectedProduct.weight || '250g' }}</span>
-                        </p>
-                    </div> -->
+                    </div> 
                 </div>
                 <div v-else class="flex h-full items-center justify-center p-4 text-center text-gray-400">
                     Selecione um produto para ver suas propriedades
@@ -122,9 +108,7 @@ const props = defineProps({
 });
 
 // Mapeamento das propriedades da gôndola
-const gondolas = computed(() => {
-    return props.planogram?.gondolas?.length ? props.planogram.gondolas : [];
-});
+const gondolas = ref<any[]>(props.planogram.gondolas || []);
 
 // ID da gôndola selecionada
 const selectedGondolaId = ref('');

@@ -91,7 +91,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['click', 'drop:product', 'segment-select',  ]);
+const emit = defineEmits(['click', 'drop:product', 'segment-select', 'update:segments', 'update:quantity']);
 
 const draggingProduct = ref(false);
 const shelfRef = ref(null);

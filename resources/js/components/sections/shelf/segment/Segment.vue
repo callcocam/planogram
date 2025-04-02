@@ -1,11 +1,10 @@
 <template>
     <div
-        class="segment drag-handle group relative flex cursor-pointer items-end border-2"
+        class="segment drag-handle group relative flex cursor-pointer flex-col items-end border-2"
         :style="segmentStyle"
         @click="segmentClick"
         @dragstart="onDragstart"
         @dragend="onDragend"
-        @keydown="handleKeydown"
         ref="segmentRef"
         draggable="true"
         tabindex="0"
@@ -22,12 +21,13 @@
             :segment="segment"
             :layer="segment.layer"
             :scale-factor="scaleFactor"
+            :selected="segmentSelected"
         />
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Layer from './Layer.vue';
 
 // ----------------------------------------------------
@@ -69,6 +69,8 @@ const segmentId = ref(`segment-${props.segment.id || Math.random().toString(36).
 /** Nome do evento customizado para comunicação entre segmentos */
 const SEGMENT_SELECTED_EVENT = 'segment-selected';
 
+// Referência para o timer de debounce
+const debounceTimer = ref<any>(null);
 // ----------------------------------------------------
 // Propriedades computadas
 // ----------------------------------------------------
@@ -76,10 +78,18 @@ const SEGMENT_SELECTED_EVENT = 'segment-selected';
  * Retorna a quantidade de segmentos e gerencia o estado de seleção
  * com base na categoria selecionada
  */
-const segmentQuantity = computed(() => {
-    // Verifica se existe uma categoria selecionada
-    if (props.selectedCategory) {
-        const isCategoryMatch = props.segment.layer.product.category_id === props.selectedCategory.id;
+const segmentQuantity = ref(props.segment.quantity);
+
+watch(
+    () => props.selectedCategory,
+    (newCategory) => {
+        if (!newCategory) {
+            // Se a categoria selecionada for nula, reseta o estado de seleção
+            segmentSelected.value = false;
+            return;
+        }
+        // Se a categoria selecionada não for nula, atualiza o estado de seleção
+        const isCategoryMatch = props.segment.layer.product.category_id === newCategory.id;
 
         // Atualiza o estado de seleção do segmento
         segmentSelected.value = isCategoryMatch;
@@ -92,17 +102,28 @@ const segmentQuantity = computed(() => {
             segmentSelected: isCategoryMatch,
             category: true,
         });
-    }
+    },
+);
 
-    return props.segment.quantity;
-});
+/**
+ * Função de debounce que atrasa a execução de uma função
+ * @param {Function} fn - Função a ser executada após o delay
+ * @param {Number} delay - Tempo de espera em ms
+ */
+const debounce = (fn, delay = 300) => {
+    if (debounceTimer.value) clearTimeout(debounceTimer.value);
+    debounceTimer.value = setTimeout(() => {
+        fn();
+        debounceTimer.value = null;
+    }, delay);
+};
 
 /**
  * Calcula o estilo do segmento com base nas propriedades e estado de seleção
  */
 const segmentStyle = computed(() => {
     // Calcula as dimensões do segmento
-    const layerHeight = props.segment.layer.product.height * props.segment.quantity * props.scaleFactor;
+    const layerHeight = props.segment.layer.product.height * segmentQuantity.value * props.scaleFactor;
     const layerWidth = props.segment.layer.product.width * props.shelf.quantity * props.scaleFactor;
 
     // Estilo condicional quando o segmento está selecionado
@@ -129,48 +150,41 @@ const segmentStyle = computed(() => {
 /**
  * Aumenta a quantidade de layers em um segmento
  */
-const increaseQuantity = () => {
+const onIncreaseQuantity = () => {
     if (!segmentSelected.value) return;
- 
-    emit('update:quantity', {
-        segmentId: props.segment.id,
-        data: {
-            increaseQuantity: true,
-        },
+
+    // Incrementa o valor imediatamente na UI
+    segmentQuantity.value++;
+
+    // Debounce na emissão do evento para o componente pai
+    debounce(() => {
+        emit('update:quantity', {
+            segmentId: props.segment.id,
+            data: {
+                increaseQuantity: segmentQuantity.value,
+            },
+        });
     });
 };
 
 /**
  * Diminui a quantidade de layers em um segmento
  */
-const decreaseQuantity = () => {
+const onDecreaseQuantity = () => {
     if (!segmentSelected.value) return;
+    if (segmentQuantity.value > 1) {
+        // Decrementa o valor imediatamente na UI
+        segmentQuantity.value--;
 
-    const minLayers = 1; // Garantir pelo menos um layer
-
-    if (props.segment.quantity > minLayers) { 
-        emit('update:quantity', {
-            segmentId: props.segment.id, 
-            data: {
-                decreaseQuantity: true,
-            },
+        // Debounce na emissão do evento para o componente pai
+        debounce(() => {
+            emit('update:quantity', {
+                segmentId: props.segment.id,
+                data: {
+                    decreaseQuantity: segmentQuantity.value,
+                },
+            });
         });
-    }
-};
-
-/**
- * Manipulador de eventos de teclado para aumentar/diminuir layers
- * @param {KeyboardEvent} event - Evento de teclado
- */
-const handleKeydown = (event) => {
-    if (!segmentSelected.value) return;
-
-    if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        increaseQuantity();
-    } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        decreaseQuantity();
     }
 };
 
@@ -336,10 +350,10 @@ onMounted(() => {
         if (segmentSelected.value) {
             if (event.key === 'ArrowUp') {
                 event.preventDefault();
-                increaseQuantity();
+                onIncreaseQuantity();
             } else if (event.key === 'ArrowDown') {
                 event.preventDefault();
-                decreaseQuantity();
+                onDecreaseQuantity();
             }
         }
     });
@@ -348,6 +362,7 @@ onMounted(() => {
 // Remove o ouvinte de eventos quando o componente é desmontado
 onUnmounted(() => {
     window.removeEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
+    if (debounceTimer.value) clearTimeout(debounceTimer.value);
 });
 </script>
 

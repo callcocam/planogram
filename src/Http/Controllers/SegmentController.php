@@ -64,12 +64,12 @@ class SegmentController extends Controller
         try {
             if ($request->has('increaseQuantity')) {
                 $segment->update([
-                    'quantity' => $segment->quantity + 1,
+                    'quantity' => $request->increaseQuantity,
                 ]);
             } elseif ($request->has('decreaseQuantity')) {
                 if ($segment->quantity > 1) {
                     $segment->update([
-                        'quantity' => $segment->quantity - 1,
+                        'quantity' => $request->decreaseQuantity,
                     ]);
                 }
             } else {

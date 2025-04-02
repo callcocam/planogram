@@ -55,13 +55,7 @@ const props = defineProps({
 
 const emit = defineEmits(['sections-reordered', 'shelves-updated', 'move-shelf-to-section', 'segment-select']);
 
-const planogram = computed(() => {
-    return props.gondola.planogram;
-});
-
-const sections = computed(() => {
-    return props.gondola.sections;
-});
+const sections = ref(props.gondola.sections || []);
 
 const lastSection = computed(() => {
     return sections.value[sections.value.length - 1];
@@ -147,9 +141,28 @@ const updateSegmentQuantity = (segment: any) => {
         route('planogram.segments.update', segment.segmentId),
         segment.data,
         {
-            preserveState: false,
+            preserveState: true,
             preserveScroll: true,
-            onSuccess: () => {},
+            onSuccess: () => {
+                // Handle success if needed
+                sortableSections.value = sortableSections.value.map((section: any) => {
+                    if (section.id === segment.sectionId) {
+                        return {
+                            ...section,
+                            segments: section.segments.map((s: any) => {
+                                if (s.id === segment.segmentId) {
+                                    return {
+                                        ...s,
+                                        quantity: segment.data.quantity,
+                                    };
+                                }
+                                return s;
+                            }),
+                        };
+                    }
+                    return section;
+                });
+            },
             onError: () => {
                 // Handle error if needed
             },
