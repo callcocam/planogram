@@ -106,6 +106,8 @@
 <script setup lang="ts">
 import { ChevronDown, Loader, Package, Search, SlidersHorizontal } from 'lucide-vue-next';
 import { onMounted, ref, watch } from 'vue';
+import Category from '../gondola/Category.vue';
+import { any } from 'zod';
 
 interface Product {
     id: number;
@@ -120,8 +122,13 @@ interface Category {
     name: string;
 }
 
-// Categorias demo
-const categories = ref([] as Category[]);
+const props = defineProps({
+    categories: {
+        type: Array as () => Category[],
+        default: [],
+    },
+});
+ 
 
 const emit = defineEmits(['select-product', 'drag-start', 'view-stats']);
 
@@ -194,19 +201,7 @@ async function fetchProducts() {
         loading.value = false;
     }
 }
-
-/**
- * Busca categorias disponíveis
- */
-async function fetchCategories() {
-    try {
-        // @ts-ignore
-        const response = await window.axios.get(route('planogram.api.categories.index'));
-        categories.value = response.data;
-    } catch (error) {
-        console.error('Erro ao carregar categorias:', error);
-    }
-}
+ 
 
 /**
  * Limpa todos os filtros
@@ -224,8 +219,7 @@ function clearFilters() {
 }
 // Inicializa o componente
 onMounted(async () => {
-    // Carrega categorias e produtos ao montar o componente
-    await fetchCategories();
+    // Carrega categorias e produtos ao montar o componente 
     await fetchProducts();
 });
 </script>

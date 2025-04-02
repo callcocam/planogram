@@ -1,7 +1,7 @@
 <template>
     <div class="flex h-full w-full gap-6 overflow-hidden">
         <!-- Barra lateral esquerda com componente Products separado -->
-        <Products @select-product="handleProductSelect" @drag-start="handleDragStart" @view-stats="showProductStats" />
+        <Products :categories="categories" @select-product="handleProductSelect" @drag-start="handleDragStart" @view-stats="showProductStats" />
 
         <!-- Área central rolável (vertical e horizontal) -->
         <div class="flex h-full w-full flex-col gap-6 overflow-x-auto overflow-y-auto">

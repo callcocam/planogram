@@ -17,6 +17,7 @@
                         @move-shelf-to-section="handleMoveShelfToSection"
                         @segment-select="$emit('segment-select', $event)"
                         @update-shelves="handleMoveSegmentToSection"
+                        @update:quantity="updateSegmentQuantity"
                     />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
@@ -130,6 +131,25 @@ const handleMoveSegmentToSection = (segment: any, sectionId: number) => {
             onSuccess: () => {
                 // Handle success if needed
             },
+            onError: () => {
+                // Handle error if needed
+            },
+            onFinish: () => {
+                // Reset the state if needed
+            },
+        },
+    );
+};
+
+const updateSegmentQuantity = (segment: any) => {
+    router.put(
+        // @ts-ignore
+        route('planogram.segments.update', segment.segmentId),
+        segment.data,
+        {
+            preserveState: false,
+            preserveScroll: true,
+            onSuccess: () => {},
             onError: () => {
                 // Handle error if needed
             },

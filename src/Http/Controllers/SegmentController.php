@@ -62,11 +62,23 @@ class SegmentController extends Controller
     {
         DB::beginTransaction();
         try {
-            $segment->update($request->validated());
+            if ($request->has('increaseQuantity')) {
+                $segment->update([
+                    'quantity' => $segment->quantity + 1,
+                ]);
+            } elseif ($request->has('decreaseQuantity')) {
+                if ($segment->quantity > 1) {
+                    $segment->update([
+                        'quantity' => $segment->quantity - 1,
+                    ]);
+                }
+            } else {
+                $segment->update($request->validated());
 
-            $layer = data_get($request->validated(), 'layer');
-            if ($layer) {
-                $segment->layer()->update($layer);
+                $layer = data_get($request->validated(), 'layer');
+                if ($layer) {
+                    $segment->layer()->update($layer);
+                }
             }
 
             DB::commit();
@@ -109,7 +121,7 @@ class SegmentController extends Controller
             ]);
             foreach ($request->segments as $ordring => $segmentData) {
                 $segment = Segment::find($segmentData['id']);
-                if ($segment) { 
+                if ($segment) {
                     $segment->update(['ordering' => $segmentData['ordering']]);
                 }
             }

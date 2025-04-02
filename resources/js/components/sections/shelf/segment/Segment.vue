@@ -1,15 +1,19 @@
 <template>
     <div
-        class="segment group relative flex cursor-pointer items-end drag-handle border-2"
+        class="segment drag-handle group relative flex cursor-pointer items-end border-2"
         :style="segmentStyle"
         @click="segmentClick"
         @dragstart="onDragstart"
         @dragend="onDragend"
+        @keydown="handleKeydown"
         ref="segmentRef"
         draggable="true"
+        tabindex="0"
     >
-        <!-- Botão de mover que aparece no hover (serve como alça de arraste) -->
-        
+        <!-- Contador de layers visível quando selecionado -->
+        <div v-if="segmentSelected" class="absolute -top-6 left-0 w-full rounded-t-md bg-blue-600 px-2 py-1 text-xs text-white">
+            Pilhas: {{ segment.quantity }}
+        </div>
 
         <Layer
             v-for="(quantity, index) in segmentQuantity"
@@ -23,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import { MoveIcon } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Layer from './Layer.vue';
 
@@ -49,7 +52,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['segment-select', 'segment-drag']);
+const emit = defineEmits(['segment-select', 'segment-drag', 'update:quantity']);
 
 // ----------------------------------------------------
 // Estado do componente
@@ -89,8 +92,6 @@ const segmentQuantity = computed(() => {
             segmentSelected: isCategoryMatch,
             category: true,
         });
-    } else {
-        // Se não houver categoria selecionada, mantém o estado de seleção atual
     }
 
     return props.segment.quantity;
@@ -109,6 +110,7 @@ const segmentStyle = computed(() => {
         ? {
               border: '2px solid blue',
               boxShadow: '0 0 5px rgba(0, 0, 255, 0.5)',
+              outline: 'none',
           }
         : {};
 
@@ -120,6 +122,57 @@ const segmentStyle = computed(() => {
         ...selectedStyle,
     };
 });
+
+// ----------------------------------------------------
+// Funções para manipular a quantidade de layers
+// ----------------------------------------------------
+/**
+ * Aumenta a quantidade de layers em um segmento
+ */
+const increaseQuantity = () => {
+    if (!segmentSelected.value) return;
+ 
+    emit('update:quantity', {
+        segmentId: props.segment.id,
+        data: {
+            increaseQuantity: true,
+        },
+    });
+};
+
+/**
+ * Diminui a quantidade de layers em um segmento
+ */
+const decreaseQuantity = () => {
+    if (!segmentSelected.value) return;
+
+    const minLayers = 1; // Garantir pelo menos um layer
+
+    if (props.segment.quantity > minLayers) { 
+        emit('update:quantity', {
+            segmentId: props.segment.id, 
+            data: {
+                decreaseQuantity: true,
+            },
+        });
+    }
+};
+
+/**
+ * Manipulador de eventos de teclado para aumentar/diminuir layers
+ * @param {KeyboardEvent} event - Evento de teclado
+ */
+const handleKeydown = (event) => {
+    if (!segmentSelected.value) return;
+
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        increaseQuantity();
+    } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        decreaseQuantity();
+    }
+};
 
 // ----------------------------------------------------
 // Manipuladores de eventos
@@ -149,6 +202,11 @@ const segmentClick = (event) => {
 
     // Notifica o componente pai sobre a seleção
     notifyParent(isMultiSelect);
+
+    // Foca no elemento para permitir eventos de teclado
+    if (segmentRef.value && segmentSelected.value) {
+        segmentRef.value.focus();
+    }
 };
 
 /**
@@ -272,6 +330,19 @@ const segmentSelectionHandler = (e) => {
 // Registra o ouvinte de eventos quando o componente é montado
 onMounted(() => {
     window.addEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
+
+    // Adiciona listener de teclado para o documento inteiro
+    document.addEventListener('keydown', (event) => {
+        if (segmentSelected.value) {
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                increaseQuantity();
+            } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                decreaseQuantity();
+            }
+        }
+    });
 });
 
 // Remove o ouvinte de eventos quando o componente é desmontado
@@ -287,6 +358,10 @@ onUnmounted(() => {
 
 .segment:hover {
     z-index: 5;
+}
+
+.segment:focus {
+    outline: none;
 }
 
 .drag-handle {
