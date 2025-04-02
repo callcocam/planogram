@@ -98,13 +98,15 @@ const onIncreaseQuantity = () => {
             increaseQuantity: true,
             quantity: currentQuantity + 1,
         })
-        .then(() => {
+        .then((response) => {
             // Atualiza a quantidade no componente pai
             layerQuantity.value++;
+            const { description, title, variant } = response.data;
+            // Atualiza a quantidade no componente pai
             toast({
-                title: 'Quantidade atualizada com sucesso',
-                description: `A quantidade de layers foi aumentada para ${layerQuantity.value}`,
-                variant: 'default',
+                title,
+                description,
+                variant,
             });
         })
         .catch((error) => {
@@ -140,17 +142,14 @@ const onDecreaseQuantity = () => {
                 toast({
                     title,
                     description,
-                    variant ,
+                    variant,
                 });
             })
             .catch((error) => {
-                // console.error('Erro ao atualizar a quantidade do segmento:', error);
-                // Exibe mensagem de erro
-                const { description, title, variant } = error.response.data;
                 toast({
-                    title,
-                    description,
-                    variant,
+                    title: 'Erro ao atualizar a quantidade do segmento',
+                    description: error.response.data.message,
+                    variant: 'destructive',
                 });
             });
         // Debounce na emissão do evento para o componente pai

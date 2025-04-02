@@ -181,13 +181,10 @@ const onIncreaseQuantity = () => {
                 });
             })
             .catch((error) => {
-                const { description, title, variant } = error.response.data;
-                console.error('Erro ao atualizar a quantidade do segmento:', error.response);
-                // Atualiza a quantidade no componente pai
                 toast({
-                    title,
-                    description,
-                    variant,
+                    title: 'Erro ao atualizar a quantidade do segmento',
+                    description: error.response.data.message,
+                    variant: 'destructive',
                 });
             });
     });
@@ -224,13 +221,10 @@ const onDecreaseQuantity = () => {
                     });
                 })
                 .catch((error) => {
-                    const { description, title, variant } = error.response.data;
-                    console.error('Erro ao atualizar a quantidade do segmento:', error);
-                    // Atualiza a quantidade no componente pai
                     toast({
-                        title,
-                        description,
-                        variant,
+                        title: 'Erro ao atualizar a quantidade do segmento',
+                        description: error.response.data.message,
+                        variant: 'destructive',
                     });
                 });
         });
