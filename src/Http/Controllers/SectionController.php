@@ -225,15 +225,14 @@ class SectionController extends Controller
 
     public function updateInvertOrder(Request $request, Gondola $gondola)
     {
-        $sections =  $gondola->sections()->orderBy('ordering', 'desc')->pluck('id')->toArray();
+        $sections =  $gondola->sections()->orderBy('ordering', 'desc')->get();
         if (empty($sections)) {
             return redirect()->back()->with('error', 'Nenhuma seção foi enviada para reordenação.');
         }
         try {
-            foreach ($sections as $index => $value) {
-                Section::where('id', $value) // Garante que a seção existe
-                    ->where('gondola_id', $gondola->id) // Garante que a Modulo pertence à gôndola
-                    ->update(['ordering' => count($sections) - $index]);
+            $count = $sections->count();
+            foreach ($sections as $index => $section) {
+                $section->update(['ordering' =>  $count - $index]);
             }
         } catch (\Exception $e) {
             return redirect()->route('planograms.show', [

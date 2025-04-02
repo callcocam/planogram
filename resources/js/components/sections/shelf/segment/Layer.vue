@@ -13,6 +13,8 @@
 </template>
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+// @ts-ignore
+import { useToast } from '@/components/ui/toast/use-toast';
 import Product from './Product.vue';
 const props = defineProps({
     shelf: {
@@ -45,9 +47,12 @@ const debounceTimer = ref<any>(null);
 
 const layerQuantity = ref(props.layer.quantity);
 
+const { toast } = useToast();
+
 watch(
     () => props.selected,
     (newValue) => {
+        console.log('Novo valor de selected:', newValue);
         segmentSelected.value = newValue;
     },
 );
@@ -84,23 +89,32 @@ const onIncreaseQuantity = () => {
     if (!segmentSelected.value) return;
 
     // Incrementa o valor imediatamente na UI
-    layerQuantity.value++;
-
+    const currentQuantity = layerQuantity.value;
     // Debounce na emissão do evento para o componente pai
-    debounce(() => {
+    // @ts-ignore
+    window.axios
         // @ts-ignore
-        window.axios
-            // @ts-ignore
-            .put(route('planogram.api.layers.update', props.layer.id), {
-                increaseQuantity: layerQuantity.value,
-            })
-            .then(() => {
-                // Atualiza a quantidade no componente pai
-            })
-            .catch((error) => {
-                console.error('Erro ao atualizar a quantidade do segmento:', error);
+        .put(route('planogram.api.layers.update', props.layer.id), {
+            increaseQuantity: true,
+            quantity: currentQuantity + 1,
+        })
+        .then(() => {
+            // Atualiza a quantidade no componente pai
+            layerQuantity.value++;
+            toast({
+                title: 'Quantidade atualizada com sucesso',
+                description: `A quantidade de layers foi aumentada para ${layerQuantity.value}`,
+                variant: 'default',
             });
-    });
+        })
+        .catch((error) => {
+            // console.error('Erro ao atualizar a quantidade do segmento:', error);
+            toast({
+                title: 'Erro ao atualizar a quantidade do segmento',
+                description: error.response.data.message,
+                variant: 'destructive',
+            });
+        });
 };
 
 /**
@@ -110,21 +124,35 @@ const onDecreaseQuantity = () => {
     if (!segmentSelected.value) return;
     if (layerQuantity.value > 1) {
         // Decrementa o valor imediatamente na UI
-        layerQuantity.value--;
-        debounce(() => {
+        const currentQuantity = layerQuantity.value - 1;
+        // @ts-ignore
+        window.axios
             // @ts-ignore
-            window.axios
-                // @ts-ignore
-                .put(route('planogram.api.layers.update', props.layer.id), {
-                    decreaseQuantity: layerQuantity.value,
-                })
-                .then(() => {
-                    // Atualiza a quantidade no componente pai
-                })
-                .catch((error) => {
-                    console.error('Erro ao atualizar a quantidade do segmento:', error);
+            .put(route('planogram.api.layers.update', props.layer.id), {
+                decreaseQuantity: true,
+                quantity: currentQuantity,
+            })
+            .then((response) => {
+                // Atualiza a quantidade no componente pai
+                layerQuantity.value--;
+                const { description, title, variant } = response.data;
+                // Atualiza a quantidade no componente pai
+                toast({
+                    title,
+                    description,
+                    variant ,
                 });
-        });
+            })
+            .catch((error) => {
+                // console.error('Erro ao atualizar a quantidade do segmento:', error);
+                // Exibe mensagem de erro
+                const { description, title, variant } = error.response.data;
+                toast({
+                    title,
+                    description,
+                    variant,
+                });
+            });
         // Debounce na emissão do evento para o componente pai
     }
 };

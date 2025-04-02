@@ -1,6 +1,6 @@
 <template>
     <div
-        class="segment drag-handle group relative flex cursor-pointer flex-col items-end border-2"
+        class="segment drag-segment-handle group relative flex cursor-pointer flex-col items-end border-2"
         :style="segmentStyle"
         @click="segmentClick"
         @dragstart="onDragstart"
@@ -28,7 +28,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+// @ts-ignore
+import { useToast } from '@/components/ui/toast/use-toast';
 import Layer from './Layer.vue';
+
+const { toast } = useToast();
 
 // ----------------------------------------------------
 // Props e Emits
@@ -154,16 +158,38 @@ const onIncreaseQuantity = () => {
     if (!segmentSelected.value) return;
 
     // Incrementa o valor imediatamente na UI
-    segmentQuantity.value++;
+    const currentQuantity = segmentQuantity.value;
 
     // Debounce na emissão do evento para o componente pai
     debounce(() => {
-        emit('update:quantity', {
-            segmentId: props.segment.id,
-            data: {
-                increaseQuantity: segmentQuantity.value,
-            },
-        });
+        // @ts-ignore
+        window.axios
+            // @ts-ignore
+            .put(route('planogram.api.segments.update', props.segment.id), {
+                increaseQuantity: true,
+                quantity: currentQuantity + 1,
+            })
+            .then((response) => {
+                // Atualiza a quantidade no componente pai
+                segmentQuantity.value++;
+                const { description, title, variant } = response.data;
+                // Atualiza a quantidade no componente pai
+                toast({
+                    title,
+                    description,
+                    variant,
+                });
+            })
+            .catch((error) => {
+                const { description, title, variant } = error.response.data;
+                console.error('Erro ao atualizar a quantidade do segmento:', error.response);
+                // Atualiza a quantidade no componente pai
+                toast({
+                    title,
+                    description,
+                    variant,
+                });
+            });
     });
 };
 
@@ -174,16 +200,39 @@ const onDecreaseQuantity = () => {
     if (!segmentSelected.value) return;
     if (segmentQuantity.value > 1) {
         // Decrementa o valor imediatamente na UI
-        segmentQuantity.value--;
+        // Incrementa o valor imediatamente na UI
+        const currentQuantity = segmentQuantity.value;
 
         // Debounce na emissão do evento para o componente pai
         debounce(() => {
-            emit('update:quantity', {
-                segmentId: props.segment.id,
-                data: {
-                    decreaseQuantity: segmentQuantity.value,
-                },
-            });
+            // @ts-ignore
+            window.axios
+                // @ts-ignore
+                .put(route('planogram.api.segments.update', props.segment.id), {
+                    decreaseQuantity: true,
+                    quantity: currentQuantity - 1,
+                })
+                .then((response) => {
+                    // Atualiza a quantidade no componente pai
+                    segmentQuantity.value--;
+                    const { description, title, variant } = response.data;
+                    // Atualiza a quantidade no componente pai
+                    toast({
+                        title,
+                        description,
+                        variant,
+                    });
+                })
+                .catch((error) => {
+                    const { description, title, variant } = error.response.data;
+                    console.error('Erro ao atualizar a quantidade do segmento:', error);
+                    // Atualiza a quantidade no componente pai
+                    toast({
+                        title,
+                        description,
+                        variant,
+                    });
+                });
         });
     }
 };

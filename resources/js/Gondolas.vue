@@ -227,7 +227,7 @@ const updateSections = (sections, gondolaId) => {
             sections: sectionIds,
         },
         {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
         },
     );
@@ -257,7 +257,7 @@ const updateInvertOrder = (gondolaId) => {
             invert_order: true,
         },
         {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
         },
     );

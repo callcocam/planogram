@@ -9,13 +9,13 @@
 namespace Callcocam\Planogram\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Callcocam\Planogram\Http\Requests\Layer\Api\StoreLayerRequest;
-use Callcocam\Planogram\Http\Requests\Layer\Api\UpdateLayerRequest;
-use Callcocam\Planogram\Models\Layer;
+use Callcocam\Planogram\Http\Requests\Segment\Api\UpdateSegmentRequest;
+use Callcocam\Planogram\Http\Requests\Segment\Api\StoreSegmentRequest;
+use Callcocam\Planogram\Models\Segment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class LayerController extends Controller
+class SegmentController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -25,7 +25,7 @@ class LayerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Layer::query()
+        $query = Segment::query()
             ->with(['tenant'])
             ->when($request->tenant_id, fn($query) => $query->where('tenant_id', $request->tenant_id))
             ->when($request->status, fn($query) => $query->where('status', $request->status))
@@ -34,9 +34,9 @@ class LayerController extends Controller
                     ->orWhere('description', 'like', "%{$request->search}%");
             }));
 
-        $layers = $query->latest()->get();
+        $segments = $query->latest()->get();
 
-        return $layers;
+        return $segments;
     }
 
     /**
@@ -45,60 +45,54 @@ class LayerController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function store(StoreLayerRequest $request)
+    public function store(StoreSegmentRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'tenant_id' => 'required|exists:tenants,id',
-            'status' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
-        $layer = Layer::create($validated);
+        $segment = Segment::create($validated);
 
-        return response()->json($layer, 201);
+        return response()->json($segment, 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param Layer $layer
+     * @param Segment $segment
      * @return Response
      */
-    public function show(Layer $layer)
+    public function show(Segment $segment)
     {
-        return response()->json($layer->load('tenant'));
+        return response()->json($segment->load('tenant'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param Layer $layer
+     * @param Segment $segment
      * @return Response
      */
-    public function update(UpdateLayerRequest $request, Layer $layer)
+    public function update(UpdateSegmentRequest $request, Segment $segment)
     {
-        $data = $request->all();
+        $data =   $request->all();
         DB::beginTransaction();
         try {
             if ($request->has('increaseQuantity')) {
-                $layer->update([
-                    'quantity' => data_get($data, 'quantity'),
+                $segment->update([
+                    'quantity' => data_get($data, 'quantity')
                 ]);
             } elseif ($request->has('decreaseQuantity')) {
-                if ($layer->quantity > 1) {
-                    $layer->update([
-                        'quantity' => data_get($data, 'quantity'),
+                if ($segment->quantity > 1) {
+                    $segment->update([
+                        'quantity' => data_get($data, 'quantity')
                     ]);
                 }
             } else {
-                $layer->update($data);
+                $segment->update($request->validated());
             }
 
             DB::commit();
             return response()->json([
-                'record' => $layer,
                 'title' => 'Camada de produto atualizada com sucesso',
                 'description' => 'Camada de produto atualizada com sucesso',
                 'variant' => 'default',
@@ -118,12 +112,12 @@ class LayerController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Layer $layer
+     * @param Segment $segment
      * @return Response
      */
-    public function destroy(Layer $layer)
+    public function destroy(Segment $segment)
     {
-        $layer->delete();
+        $segment->delete();
 
         return response()->json(null, 204);
     }

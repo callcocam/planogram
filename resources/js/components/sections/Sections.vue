@@ -141,27 +141,10 @@ const updateSegmentQuantity = (segment: any) => {
         route('planogram.segments.update', segment.segmentId),
         segment.data,
         {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
             onSuccess: () => {
-                // Handle success if needed
-                sortableSections.value = sortableSections.value.map((section: any) => {
-                    if (section.id === segment.sectionId) {
-                        return {
-                            ...section,
-                            segments: section.segments.map((s: any) => {
-                                if (s.id === segment.segmentId) {
-                                    return {
-                                        ...s,
-                                        quantity: segment.data.quantity,
-                                    };
-                                }
-                                return s;
-                            }),
-                        };
-                    }
-                    return section;
-                });
+                // Handle success if  
             },
             onError: () => {
                 // Handle error if needed

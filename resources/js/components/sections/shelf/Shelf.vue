@@ -10,9 +10,9 @@
         <draggable
             v-model="sortableSegments"
             item-key="id"
-            handle=".drag-handle"
+            handle=".drag-segment-handle"
             @end="onSegmentDragEnd"
-            class="relative flex w-full items-end justify-between px-4"
+            class="relative flex w-full items-end justify-around"
             :style="segmentsContainerStyle"
         >
             <template #item="{ element: segment }">
@@ -179,6 +179,7 @@ const handleSegmentDrag = (eventData) => {
 // Função para lidar com o fim do arraste de segmentos
 const onSegmentDragEnd = (event) => {
     // Se não houver mudança na ordem, não fazemos nada
+    console.log('Evento de drag end:', event.moved);
     if (!event.moved) {
         console.log('Sem alteração na ordem');
         return;
