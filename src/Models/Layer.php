@@ -8,6 +8,7 @@
 
 namespace Callcocam\Planogram\Models;
 
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
