@@ -8,24 +8,20 @@
 
 namespace Callcocam\Planogram\Models;
 
-use Callcocam\Planogram\Enums\GondolaStatus;
-use Callcocam\Raptor\Core\Concerns\Sluggable\HasSlug;
-use Callcocam\Raptor\Core\Concerns\Sluggable\SlugOptions;
-use Callcocam\Raptor\Core\Landlord\BelongsToTenants;
-use Callcocam\Raptor\Models\Tenant;
+use Callcocam\Planogram\Enums\GondolaStatus;   
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model; 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Tall\Sluggable\HasSlug;
+use Tall\Sluggable\SlugOptions;
 
 class Gondola extends Model
 {
-    use BelongsToTenants, HasFactory, HasSlug, HasUlids, SoftDeletes;
+    use HasFactory, HasSlug, HasUlids, SoftDeletes;
 
-    protected $fillable = [
-        'tenant_id',
+    protected $fillable = [ 
         'user_id',
         'planogram_id',
         'name',
@@ -42,11 +38,7 @@ class Gondola extends Model
         'scale_factor' => 'integer',
         'status' => GondolaStatus::class,
     ];
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+ 
 
     public function sections(): HasMany
     {

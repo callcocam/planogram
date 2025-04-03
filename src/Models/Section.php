@@ -7,22 +7,21 @@
  */
 
 namespace Callcocam\Planogram\Models;
-
+ 
+use Tall\Sluggable\HasSlug;
 use App\Models\User;
-use Callcocam\Planogram\Enums\SectionStatus;
-use Callcocam\Raptor\Core\Concerns\Sluggable\HasSlug;
-use Callcocam\Raptor\Core\Concerns\Sluggable\SlugOptions;
-use Callcocam\Raptor\Core\Landlord\BelongsToTenants;
+use Callcocam\Planogram\Enums\SectionStatus; 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Tall\Sluggable\SlugOptions;
 
 class Section extends Model
 {
-    use BelongsToTenants, HasFactory, HasSlug, HasUlids, SoftDeletes;
+    use HasFactory, HasSlug, HasUlids, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

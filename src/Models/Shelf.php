@@ -8,15 +8,14 @@
 
 namespace Callcocam\Planogram\Models;
 
-use Callcocam\Planogram\Enums\ShelfStatus;
-use Callcocam\Raptor\Core\Landlord\BelongsToTenants;
+use Callcocam\Planogram\Enums\ShelfStatus; 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Shelf extends Model
 {
-    use BelongsToTenants,  HasUlids, SoftDeletes;
+    use  HasUlids, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',

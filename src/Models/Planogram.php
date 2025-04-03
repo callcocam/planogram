@@ -8,13 +8,13 @@
 
 namespace Callcocam\Planogram\Models;
 
-use Callcocam\Planogram\Enums\PlanogramStatus;
-use Callcocam\Raptor\Core\Concerns\Sluggable\HasSlug;
-use Callcocam\Raptor\Core\Concerns\Sluggable\SlugOptions;
+use Callcocam\Planogram\Enums\PlanogramStatus; 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Tall\Sluggable\HasSlug;
+use Tall\Sluggable\SlugOptions;
 
 class Planogram extends Model
 {
