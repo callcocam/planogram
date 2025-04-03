@@ -64,11 +64,11 @@ const iconClass = computed(() => {
             </svg>
             <span class="sr-only">Abrir filtros</span>
         </PopoverTrigger>
-        <PopoverContent class="w-80">
+        <PopoverContent class="w-80 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex flex-col gap-3 p-2">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-medium">{{ title }}</h3>
-                    <span v-if="hasActiveFilters" class="cursor-pointer text-xs text-blue-500 hover:text-blue-700" @click="clearAllFilters">
+                    <h3 class="text-sm font-medium dark:text-gray-200">{{ title }}</h3>
+                    <span v-if="hasActiveFilters" class="cursor-pointer text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" @click="clearAllFilters">
                         Limpar todos
                     </span>
                 </div>
@@ -80,7 +80,7 @@ const iconClass = computed(() => {
 
                 <!-- Botões de ação -->
                 <div class="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" size="sm" @click="clearAllFilters" :disabled="!hasActiveFilters">
+                    <Button variant="outline" size="sm" @click="clearAllFilters" :disabled="!hasActiveFilters" class="dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
                         {{ clearText }}
                     </Button>
                 </div>

@@ -1,9 +1,10 @@
-<!-- Versão atualizada do Shelf.vue para suportar update de quantidade -->
+<!-- Versão atualizada do Shelf.vue com ghost melhorado -->
 <template>
     <div
         class="shelf relative flex items-end justify-around border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
+        @drop.prevent="onDrop"
         ref="shelfRef"
     >
         <!-- Implementação do draggable para os segmentos -->
@@ -36,7 +37,6 @@
             draggable="true"
             @dragstart="onDragstart"
             @dragend="onDragend"
-            @drop.prevent="onDrop"
             @dragenter="onDragEnter"
             @dragleave="onDragLeave"
         >
@@ -45,10 +45,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Template oculto para o ghost -->
+    <div ref="ghostTemplate" class="hidden">
+        <div class="shelf-ghost rounded-md border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800">
+            <!-- Simulação dos segmentos para o ghost -->
+            <div class="flex w-full items-end justify-around">
+                <template v-for="segment in sortableSegments" :key="segment.id">
+                    <div
+                        class="segment-ghost"
+                        :style="{
+                            width: `${segment.width * scaleFactor}px`,
+                            height: `${segment.layer?.height * scaleFactor || 40}px`,
+                            backgroundColor: getRandomColor(segment.id),
+                        }"
+                    ></div>
+                </template>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import draggable from 'vuedraggable';
 import Segment from './segment/Segment.vue';
 
@@ -95,6 +114,25 @@ const emit = defineEmits(['click', 'drop:product', 'segment-select', 'update:seg
 
 const draggingProduct = ref(false);
 const shelfRef = ref(null);
+const ghostTemplate = ref(null);
+const ghost = ref(null);
+
+// Função para gerar cores aleatórias consistentes baseadas no ID
+function getRandomColor(id) {
+    // Converte o ID em um número para usar como seed
+    let seed = 0;
+    if (typeof id === 'string') {
+        for (let i = 0; i < id.length; i++) {
+            seed += id.charCodeAt(i);
+        }
+    } else if (typeof id === 'number') {
+        seed = id;
+    }
+
+    // Usa o seed para gerar uma cor HSL com saturação e luminosidade controladas
+    const hue = (seed * 137.5) % 360;
+    return `hsl(${hue}, 70%, 60%)`;
+}
 
 // Garantir que todos os segmentos tenham IDs
 const ensureSegmentIds = (segments) => {
@@ -176,7 +214,6 @@ const handleSegmentDrag = (eventData) => {
 };
 
 // Função para lidar com alterações no arrasto de segmentos
-// Substituindo onSegmentDragEnd por onSegmentDragChange para capturar todos os tipos de alterações
 const onSegmentDragChange = (event) => {
     console.log('Evento de drag change:', event);
 
@@ -330,31 +367,79 @@ const onDragLeave = (event) => {
     }
 };
 
+// Criar ghost baseado no estado atual da prateleira
+const createShelfGhost = () => {
+    // Verifica se já existe um ghost e remove
+    if (ghost.value) {
+        document.body.removeChild(ghost.value);
+        ghost.value = null;
+    }
+
+    // Cria um clone visual da prateleira para o ghost
+    const ghostEl = document.createElement('div');
+    ghostEl.className = 'shelf-drag-ghost';
+
+    // Definir dimensões e estilos
+    ghostEl.style.width = `${props.sectionWidth * props.scaleFactor}px`;
+    ghostEl.style.height = `${props.shelf.shelf_height * props.scaleFactor}px`;
+    ghostEl.style.backgroundColor = 'rgba(55, 65, 81, 0.9)'; // Cor similar à prateleira
+    ghostEl.style.borderRadius = '4px';
+    ghostEl.style.border = '1px solid rgba(75, 85, 99, 0.8)';
+    ghostEl.style.position = 'absolute';
+    ghostEl.style.zIndex = '999';
+    ghostEl.style.pointerEvents = 'none';
+    ghostEl.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+    ghostEl.style.overflow = 'hidden';
+
+    // Adicionar representação visual dos segmentos
+    const segmentsContainer = document.createElement('div');
+    segmentsContainer.className = 'flex w-full h-full items-end justify-around';
+    segmentsContainer.style.padding = '2px';
+
+    // Adiciona representações dos segmentos
+    sortableSegments.value.forEach((segment) => {
+        const segmentEl = document.createElement('div');
+
+        // Calcula a largura e altura do segmento
+        const width = segment.width * props.scaleFactor;
+        const height = (segment.layer?.height || 40) * props.scaleFactor;
+
+        // Define os estilos do segmento
+        segmentEl.style.width = `${width}px`;
+        segmentEl.style.height = `${height}px`;
+        segmentEl.style.backgroundColor = getRandomColor(segment.id);
+        segmentEl.style.margin = '0 2px';
+        segmentEl.style.borderRadius = '2px';
+
+        segmentsContainer.appendChild(segmentEl);
+    });
+
+    ghostEl.appendChild(segmentsContainer);
+
+    // Adiciona ao body
+    document.body.appendChild(ghostEl);
+    ghost.value = ghostEl;
+
+    return ghostEl;
+};
+
 // Função chamada quando o drag começa
 const onDragstart = (event) => {
     event.target.style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
     event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
     event.dataTransfer.setData('text/shelf', JSON.stringify(props.shelf));
-    // Vamos criar um ghost para o arraste da prateleira
-    const ghost = document.createElement('div');
-    ghost.className = 'shelf-drag-handle';
-    ghost.style.width = `${props.sectionWidth * props.scaleFactor}px`;
-    ghost.style.height = `${props.shelf.shelf_height * props.scaleFactor}px`;
-    ghost.style.backgroundColor = 'rgba(59, 130, 246, 0.5)';
-    ghost.style.position = 'absolute';
-    ghost.style.top = '0';
-    ghost.style.left = '-50%';
-    ghost.style.zIndex = '10';
-    ghost.style.pointerEvents = 'none'; // Desabilita eventos de ponteiro
-    ghost.style.opacity = '0.5'; // Diminui a opacidade do ghost
-    ghost.style.borderRadius = '8px'; // Adiciona borda arredondada
-    ghost.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.5)'; // Adiciona sombra
-    ghost.style.transition = 'all 0.2s ease'; // Adiciona transição suave
-    document.body.appendChild(ghost); // Adiciona o ghost ao body
-    event.dataTransfer.setDragImage(ghost, 0, 0); // Define o ghost como imagem de arraste
-    setTimeout(() => {
-        ghost.remove(); // Remove o ghost após o arraste
-    }, 0);
+
+    // Cria um ghost mais avançado que se parece com a prateleira
+    const newGhost = createShelfGhost();
+
+    // Define offset de arraste (para centralizar no cursor)
+    const offsetX = (props.sectionWidth * props.scaleFactor) / 2;
+    const offsetY = 20; // Um pouco acima do cursor
+
+    // Define o ghost como imagem de arraste
+    event.dataTransfer.setDragImage(newGhost, offsetX, offsetY);
+
+    console.log('Iniciando arraste da prateleira:', ghost.value);
 };
 
 // Função chamada quando o drag termina
@@ -363,8 +448,17 @@ const onDragend = (event) => {
     event.dataTransfer.clearData();
     event.target.style.opacity = '1'; // Restaura a opacidade da prateleira
     event.target.style.zIndex = '1'; // Restaura o z-index da prateleira
+
+    // Limpa o ghost após um pequeno delay (para evitar flicker)
+    setTimeout(() => {
+        if (ghost.value) {
+            document.body.removeChild(ghost.value);
+            ghost.value = null;
+        }
+    }, 50);
+
     const shelf = props.shelf;
-    //pegar a posição da prateleira
+    // Pegar a posição da prateleira
     const position = event.target.getBoundingClientRect();
     const shelfPosition = {
         left: position.left,
@@ -373,9 +467,15 @@ const onDragend = (event) => {
         height: position.height,
     };
 
-    // Atualiza a posição da prateleira
-    shelf.shelf_position = shelfPosition.top;
+    // Atualiza a posição da prateleira se necessário
+    // shelf.shelf_position = shelfPosition.top;
 };
+
+// Limpar recursos quando o componente é desmontado
+onMounted(() => {
+    // Se quiser usar a versão html2canvas para o ghost,
+    // pode adicionar código aqui para pré-renderizar a prateleira
+});
 </script>
 
 <style scoped>
@@ -425,6 +525,24 @@ const onDragend = (event) => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+/* Estilo para o ghost da prateleira */
+:global(.shelf-drag-ghost) {
+    animation: ghost-appear 0.2s ease;
+    opacity: 0.85;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes ghost-appear {
+    from {
+        opacity: 0.4;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 0.85;
+        transform: scale(1);
+    }
+}
+
 /* Estilo para tema escuro */
 :global(.dark) .shelf {
     background-color: #374151;
@@ -437,5 +555,10 @@ const onDragend = (event) => {
 
 :global(.dark) .product-indicator {
     background-color: rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .shelf-drag-ghost {
+    background-color: rgba(30, 41, 59, 0.9);
+    border-color: #4b5563;
 }
 </style>

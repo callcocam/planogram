@@ -79,7 +79,7 @@ watch(
 </script>
 
 <template>
-    <div class="sticky top-0 z-50 border-b bg-white shadow-sm dark:bg-gray-800">
+    <div class="sticky top-0 z-50 border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
         <div class="p-4">
             <div class="flex items-center justify-between">
                 <div class="flex flex-col items-center space-x-8 md:flex-row">
@@ -104,7 +104,7 @@ watch(
                                 variant="outline"
                                 size="icon"
                                 @click="updateScale(Math.max(2, scaleFactor - 1))"
-                                class="!p-1"
+                                class="!p-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                                 :disabled="scaleFactor <= 2"
                             >
                                 <Minus class="h-4 w-4" />
@@ -115,7 +115,7 @@ watch(
                                 variant="outline"
                                 size="icon"
                                 @click="updateScale(Math.min(10, scaleFactor + 1))"
-                                class="!p-1"
+                                class="!p-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                                 :disabled="scaleFactor >= 10"
                             >
                                 <Plus class="h-4 w-4" />
@@ -129,7 +129,7 @@ watch(
                         variant="outline"
                         size="icon"
                         @click="updateShowGrid(!showGrid)"
-                        class="ml-4 !p-1"
+                        class="ml-4 !p-1 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                         :class="{ 'bg-gray-100 dark:bg-gray-700': showGrid }"
                     >
                         <Grid class="h-4 w-4" />
@@ -152,12 +152,22 @@ watch(
                 <!-- Botões agrupados -->
                 <div class="flex items-center space-x-3">
                     <!-- Botão para inverter ordem -->
-                    <Button type="button" variant="secondary" v-if="sections.length > 0" @click="invertOrder" class="flex items-center">
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        v-if="sections.length > 0" 
+                        @click="invertOrder" 
+                        class="flex items-center dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    >
                         <ArrowLeftRight class="mr-1 h-4 w-4" />
                         <span class="hidden md:block">Inverter Ordem</span>
                     </Button>
 
-                    <Button type="button" variant="secondary" class="flex items-center">
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        class="flex items-center dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    >
                         <Plus class="mr-1 h-4 w-4" />
                         <span class="hidden md:block">Adicionar Modulo</span>
                     </Button>

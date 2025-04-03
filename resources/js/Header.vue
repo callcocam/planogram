@@ -1,5 +1,5 @@
 <template>
-    <div class="mb-6 border-b pb-4" v-if="planogram">
+    <div class="mb-6 border-b pb-4 dark:border-gray-700" v-if="planogram">
         <!-- Modal para adicionar gôndola -->
         <GondolaModal
             :open="showGondolaModal"
@@ -13,24 +13,24 @@
         <div class="flex items-center justify-between">
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                    <h2 class="text-2xl font-bold tracking-tight">{{ planogram.name }}</h2>
+                    <h2 class="text-2xl font-bold tracking-tight dark:text-gray-100">{{ planogram.name }}</h2>
                     <Badge :variant="getStatusVariant(planogram.status)">
                         {{ planogram.status }}
                     </Badge>
                 </div>
-                <p class="text-sm text-muted-foreground">ID: {{ planogram.id }} | Criado em: {{ formatDate(planogram.created_at) }}</p>
+                <p class="text-sm text-muted-foreground dark:text-gray-400">ID: {{ planogram.id }} | Criado em: {{ formatDate(planogram.created_at) }}</p>
             </div>
 
             <div class="flex items-center gap-2">
-                <Button variant="outline" size="sm" @click="openAddGondolaModal">
+                <Button variant="outline" size="sm" @click="openAddGondolaModal" class="dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
                     <PlusCircleIcon class="mr-2 h-4 w-4" />
                     Adicionar Gôndola
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" class="dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
                     <PencilIcon class="mr-2 h-4 w-4" />
                     Editar
                 </Button>
-                <Button size="sm">
+                <Button size="sm" class="dark:hover:bg-primary-800">
                     <SaveIcon class="mr-2 h-4 w-4" />
                     Salvar
                 </Button>
@@ -38,29 +38,29 @@
         </div>
 
         <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card>
+            <Card class="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader class="pb-2">
-                    <CardTitle class="text-sm font-medium">Tenant</CardTitle>
+                    <CardTitle class="text-sm font-medium dark:text-gray-200">Tenant</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div class="text-lg font-semibold">{{ planogram.tenant.name }}</div>
-                    <div class="text-sm text-muted-foreground">{{ planogram.tenant.email }}</div>
+                    <div class="text-lg font-semibold dark:text-gray-100">{{ planogram.tenant.name }}</div>
+                    <div class="text-sm text-muted-foreground dark:text-gray-400">{{ planogram.tenant.email }}</div>
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card class="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader class="pb-2">
-                    <CardTitle class="text-sm font-medium">Detalhes</CardTitle>
+                    <CardTitle class="text-sm font-medium dark:text-gray-200">Detalhes</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div class="space-y-1">
                         <div class="flex justify-between">
-                            <span class="text-sm text-muted-foreground">Slug:</span>
-                            <span class="text-sm font-medium">{{ planogram.slug }}</span>
+                            <span class="text-sm text-muted-foreground dark:text-gray-400">Slug:</span>
+                            <span class="text-sm font-medium dark:text-gray-300">{{ planogram.slug }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-sm text-muted-foreground">Atualizado:</span>
-                            <span class="text-sm font-medium">{{ formatDate(planogram.updated_at) }}</span>
+                            <span class="text-sm text-muted-foreground dark:text-gray-400">Atualizado:</span>
+                            <span class="text-sm font-medium dark:text-gray-300">{{ formatDate(planogram.updated_at) }}</span>
                         </div>
                     </div>
                 </CardContent>

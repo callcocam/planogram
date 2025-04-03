@@ -1,46 +1,52 @@
 <template>
     <div class="movable-container" ref="containerRef">
-        <div class="movable-content" :style="contentStyle" :class="{ 'is-dragging': isDragging }">
-            <!-- Alça de arrasto acoplada ao conteúdo -->
-            <div
-                title="Arraste para mover"
-                class="drag-handle flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                @mousedown="startDrag"
-                @touchstart="startDrag"
-                :class="{ 'bg-primary/90': isDragging }"
-            >
-                <span class="sr-only">Mover Gôndola</span>
-                <Move class="h-5 w-5" />
-            </div>
+        <!-- Todo o componente movable-content torna-se arrastável -->
+        <div
+            class="movable-content"
+            :style="contentStyle"
+            :class="{ 'is-dragging': isDragging }"
+            @mousedown="onComponentMouseDown"
+            @touchstart="onComponentTouchStart"
+        >
+            <!-- A alça de arrasto ainda é mantida para indicação visual -->
 
             <!-- Slot para o conteúdo original (seu SectionList) -->
-            <div class="content-slot">
-                <slot></slot>
-            </div>
-
-            <!-- Botão para centralizar também acoplado ao conteúdo -->
-            <button
-                class="center-button flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
-                @click="resetPosition"
-                title="Centralizar Gôndola"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+            <div class="relative flex border-b4 border-gray-500 dark:border-gray-500">
+                <div
+                    title="Arraste para mover"
+                    class="drag-handle flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500 dark:shadow-gray-900/30"
+                    :class="{ 'bg-primary/90': isDragging, 'dark:bg-gray-500': isDragging }"
                 >
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <polyline points="9 21 3 21 3 15"></polyline>
-                    <line x1="21" y1="3" x2="14" y2="10"></line>
-                    <line x1="3" y1="21" x2="10" y2="14"></line>
-                </svg>
-            </button>
+                    <span class="sr-only">Mover Gôndola</span>
+                    <Move class="h-5 w-5" />
+                </div>
+                <div class="content-slot mb-5">
+                    <slot></slot>
+                </div>
+                <!-- Botão para centralizar também acoplado ao conteúdo -->
+                <button
+                    class="center-button flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all duration-200 hover:bg-accent hover:text-accent-foreground dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-gray-200"
+                    @click.stop="resetPosition"
+                    title="Centralizar Gôndola"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 </template>
@@ -80,6 +86,44 @@ const dragState = ref({
 const contentStyle = computed(() => ({
     transform: `translate(${position.value.x}px, ${position.value.y}px)`,
 }));
+
+// Função para verificar se o clique foi dentro do content-slot
+function isInsideContentSlot(event) {
+    const contentSlot = document.querySelector('.content-slot');
+    if (!contentSlot) return false;
+
+    // Obtém as coordenadas do clique
+    const x = event.clientX || (event.touches ? event.touches[0].clientX : 0);
+    const y = event.clientY || (event.touches ? event.touches[0].clientY : 0);
+
+    // Obtém a posição do elemento content-slot
+    const rect = contentSlot.getBoundingClientRect();
+
+    // Verifica se o clique foi dentro da área do content-slot
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+// Manipulador de eventos para mouse down no componente
+function onComponentMouseDown(event) {
+    // Se o clique foi dentro do content-slot, não inicia o arrasto
+    if (isInsideContentSlot(event)) {
+        return;
+    }
+
+    // Caso contrário, inicia o arrasto
+    startDrag(event);
+}
+
+// Manipulador de eventos para touch start no componente
+function onComponentTouchStart(event) {
+    // Se o toque foi dentro do content-slot, não inicia o arrasto
+    if (isInsideContentSlot(event)) {
+        return;
+    }
+
+    // Caso contrário, inicia o arrasto
+    startDrag(event);
+}
 
 // Iniciar o arrasto
 function startDrag(event) {
@@ -206,7 +250,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .movable-container {
     position: relative;
-    min-height: 300px;
+    height: 100vh; /* Altura total da tela */
     overflow: visible;
     width: 100%;
 }
@@ -215,6 +259,7 @@ onBeforeUnmount(() => {
     position: relative;
     transition: transform 0.1s ease;
     will-change: transform;
+    cursor: move; /* Cursor de movimento em toda a área */
 }
 
 .movable-content.is-dragging {
@@ -223,6 +268,11 @@ onBeforeUnmount(() => {
 
 .content-slot {
     position: relative;
+    cursor: default; /* Mantém o cursor padrão para o conteúdo interno */
+    z-index: 5; /* Garante que o conteúdo fique "acima" para interação */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Estilo para a alça de arrasto */
@@ -246,10 +296,12 @@ onBeforeUnmount(() => {
 .center-button {
     position: absolute;
     top: 15%;
-    right: -40px;
+    right: 0;
+    transform: translateY(-100%);
     width: 36px;
     height: 36px;
     z-index: 100;
+    cursor: pointer; /* Garante cursor de ponteiro para o botão */
 }
 
 /* Responsividade para telas menores */
@@ -263,6 +315,13 @@ onBeforeUnmount(() => {
     .center-button {
         width: 32px;
         height: 32px;
+    }
+}
+
+/* Estilos para o modo escuro via CSS */
+@media (prefers-color-scheme: dark) {
+    .movable-content {
+        /* Ajustes específicos para o modo escuro no conteúdo movível, se necessário */
     }
 }
 </style>

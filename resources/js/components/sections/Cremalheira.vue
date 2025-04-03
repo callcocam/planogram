@@ -1,5 +1,5 @@
 <template>
-    <div :style="gramalheiraStyle" class="group relative bg-slate-900">
+    <div :style="gramalheiraStyle" class="group relative bg-slate-900 dark:bg-gray-700">
         <!-- Botões que aparecem apenas no hover, posicionados acima da gramalheira em coluna -->
         <div
             v-if="!props.isLastSection"
@@ -17,7 +17,7 @@
         <div
             v-for="(hole, index) in holes"
             :key="index"
-            class="absolute bg-slate-100"
+            class="absolute bg-slate-700 dark:bg-gray-300"
             :style="{
                 width: `${hole.width * scaleFactor}px`,
                 height: `${hole.height * scaleFactor}px`,
@@ -28,7 +28,7 @@
 
         <!-- Base section (without holes) at the bottom -->
         <div
-            class="absolute bottom-0 left-0 w-full bg-slate-900"
+            class="absolute bottom-0 left-0 w-full bg-slate-900 dark:bg-gray-700"
             :style="{
                 height: `${baseHeight * props.scaleFactor}px`,
             }"

@@ -20,7 +20,7 @@
                         @update:invertOrder="updateInvertOrder"
                         @update:category="updateCategory"
                     />
-                    <div class="w-full flex-col gap-6 overflow-visible border dark:border-gray-700 md:flex-row">
+                    <div class=" flex-col gap-6 overflow-visible border dark:border-gray-700 md:flex-row">
                         <!-- Area de trabalho -->
                         <MovableContainer :storage-id="gondola.id" :scale-factor="gondola.scale_factor">
                             <Sections

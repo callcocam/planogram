@@ -1,11 +1,11 @@
 <template>
-    <div class="flex w-full flex-col bg-white shadow-sm dark:bg-gray-800 md:flex-row">
-        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="mt-28 flex w-full px-10 md:flex-row">
+    <div class="flex flex-col bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 md:flex-row">
+        <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="mt-28 flex px-10 md:flex-row">
             <template #item="{ element: section, index }">
                 <div class="flex items-center">
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" @delete-section="deleteSection">
                         <template #actions>
-                            <Button size="sm" class="drag-handle h-6 w-6 cursor-move p-0" variant="secondary">
+                            <Button size="sm" class="drag-handle h-6 w-6 cursor-move p-0 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" variant="secondary">
                                 <MoveIcon class="h-3 w-3" />
                             </Button>
                         </template>
@@ -31,7 +31,7 @@
 import { router } from '@inertiajs/vue3';
 import { MoveIcon } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import Gramalheira from './Gramalheira.vue';
+import Gramalheira from './Cremalheira.vue';
 import Section from './Section.vue';
 // @ts-ignore
 import { Button } from '@/components/ui/button';
@@ -157,3 +157,13 @@ const updateSegmentQuantity = (segment: any) => {
     );
 };
 </script>
+
+<style scoped>
+/* Estilos para o modo escuro específicos do componente Sections, se necessário */
+@media (prefers-color-scheme: dark) {
+    .drag-handle {
+        /* Ajustes adicionais para o ícone de arrastar no modo escuro, se necessário */
+        filter: brightness(1.1);
+    }
+}
+</style>
