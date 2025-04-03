@@ -190,7 +190,7 @@ function handleProductDrop(product, sectionId) {
             product_id: product.id,
         },
         {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
         },
     );
@@ -242,7 +242,7 @@ const updateScaleFactor = (scaleFactor, gondolaId) => {
             scale_factor: scaleFactor,
         },
         {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
         },
     );
