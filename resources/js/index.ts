@@ -3,6 +3,7 @@ import type { App } from 'vue'
 import AppPlanogram from './App.vue';
 import GondolaModal from './components/modal/gondola/Add.vue';
 import PlanogramLayout from './PlanogramLayout.vue';
+import FlashMessageHandler from './FlashMessageHandler.vue';
 // @ts-ignore
 import { Toaster } from '@/components/ui/toast'
 import ConfirmProvider from './ConfirmProvider.vue';
@@ -18,6 +19,8 @@ const install = (app: App, options: PluginOptions = {}) => {
     app.component('v-planogram', AppPlanogram);
     app.component('PlanogramLayout', PlanogramLayout);
     app.component('v-planogram-layout', PlanogramLayout);
+    app.component('FlashMessageHandler', FlashMessageHandler);
+    app.component('v-flash-message-handler', FlashMessageHandler);
 
     // Componente global Toast
     app.component('Toaster', Toaster)
