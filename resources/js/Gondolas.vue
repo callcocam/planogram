@@ -280,7 +280,7 @@ const updateCategory = (category) => {
 async function fetchCategories() {
     try {
         // @ts-ignore
-        const response = await window.axios.get(route('planogram.api.categories.index'));
+        const response = await window.axios.get(route('api.categories.index'));
         categories.value = response.data;
     } catch (error) {
         console.error('Erro ao carregar categorias:', error);

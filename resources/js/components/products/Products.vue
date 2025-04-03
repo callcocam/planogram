@@ -183,7 +183,7 @@ async function fetchProducts() {
 
         // Se houver implementação real da API
         // @ts-ignore
-        const response = await window.axios.get(route('planogram.api.products.index'), {
+        const response = await window.axios.get(route('api.products.index'), {
             params: {
                 search: filters.value.search,
                 category: filters.value.category,
