@@ -1,44 +1,44 @@
 <template>
     <div class="space-y-4">
         <div class="mb-4 flex items-center">
-            <div class="rounded-full bg-gray-100 p-2">
-                <LayoutGridIcon class="h-5 w-5" />
+            <div class="rounded-full bg-gray-100 p-2 dark:bg-gray-700">
+                <LayoutGridIcon class="h-5 w-5 dark:text-gray-200" />
             </div>
-            <h3 class="ml-2 text-lg font-medium">Configurar Módulos</h3>
+            <h3 class="ml-2 text-lg font-medium dark:text-gray-100">Configurar Módulos</h3>
         </div>
 
         <!-- Configuração dos Módulos -->
         <div class="space-y-2">
-            <h4 class="text-sm font-medium">Configurações de Módulos</h4>
+            <h4 class="text-sm font-medium dark:text-gray-200">Configurações de Módulos</h4>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="space-y-2">
-                    <Label for="num_modulos">Número de Módulos</Label>
-                    <Input id="num_modulos" type="number" v-model="formLocal.num_modulos" min="1" @change="updateForm" />
-                    <p class="text-xs text-gray-500">Quantidade de módulos na gôndola</p>
+                    <Label for="num_modulos" class="dark:text-gray-200">Número de Módulos</Label>
+                    <Input id="num_modulos" type="number" v-model="formLocal.num_modulos" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Quantidade de módulos na gôndola</p>
                 </div>
                 <div class="space-y-2">
-                    <Label for="height">Altura dos Módulos (cm)</Label>
-                    <Input id="height" type="number" v-model="formLocal.height" min="1" @change="updateForm" />
-                    <p class="text-xs text-gray-500">Altura de cada módulo da seção</p>
+                    <Label for="height" class="dark:text-gray-200">Altura dos Módulos (cm)</Label>
+                    <Input id="height" type="number" v-model="formLocal.height" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Altura de cada módulo da seção</p>
                 </div>
                 <div class="space-y-2">
-                    <Label for="width">Largura dos Módulos (cm)</Label>
-                    <Input id="width" type="number" v-model="formLocal.width" min="1" @change="updateForm" />
-                    <p class="text-xs text-gray-500">Largura de cada módulo da seção</p>
+                    <Label for="width" class="dark:text-gray-200">Largura dos Módulos (cm)</Label>
+                    <Input id="width" type="number" v-model="formLocal.width" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Largura de cada módulo da seção</p>
                 </div>
             </div>
         </div> 
         <!-- Visualização dos Módulos -->
-        <div class="mt-5 flex justify-center rounded-lg border bg-gray-50 p-4">
+        <div class="mt-5 flex justify-center rounded-lg border bg-gray-50 p-4 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex space-x-4">
-                <div v-for="modulo in parseInt(formLocal.num_modulos)" :key="modulo" class="w-16 border border-gray-300 bg-white">
-                    <div class="flex h-40 items-center justify-center text-xs text-gray-400">Módulo {{ modulo }}</div>
+                <div v-for="modulo in parseInt(formLocal.num_modulos)" :key="modulo" class="w-16 border border-gray-300 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <div class="flex h-40 items-center justify-center text-xs text-gray-400 dark:text-gray-300">Módulo {{ modulo }}</div>
                 </div>
             </div>
         </div>
 
-        <div class="rounded-lg border border-blue-100 bg-blue-50 p-4">
-            <p class="text-sm text-blue-800">
+        <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
                 <span class="font-medium">Dica:</span> A configuração de módulos define quantas divisões verticais a gôndola terá. Cada módulo pode
                 ter suas próprias prateleiras.
             </p>

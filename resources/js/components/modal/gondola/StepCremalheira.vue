@@ -1,53 +1,53 @@
 <template>
     <div class="space-y-4">
         <div class="mb-4 flex items-center">
-            <div class="rounded-full bg-gray-100 p-2">
-                <GripVerticalIcon class="h-5 w-5" />
+            <div class="rounded-full bg-gray-100 p-2 dark:bg-gray-700">
+                <GripVerticalIcon class="h-5 w-5 dark:text-gray-200" />
             </div>
-            <h3 class="ml-2 text-lg font-medium">Configurar Cremalheira</h3>
+            <h3 class="ml-2 text-lg font-medium dark:text-gray-100">Configurar Cremalheira</h3>
         </div>
 
         <!-- Dimensões da Cremalheira -->
         <div class="space-y-2">
-            <h4 class="text-sm font-medium">Dimensões da Cremalheira</h4>
+            <h4 class="text-sm font-medium dark:text-gray-200">Dimensões da Cremalheira</h4>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="space-y-2">
-                    <Label for="cremalheira_width">Largura da Cremalheira (cm)</Label>
-                    <Input id="cremalheira_width" type="number" v-model="formLocal.cremalheira_width" min="1" @change="updateForm" />
-                    <p class="text-xs text-gray-500">Largura da coluna vertical (cremalheira)</p>
+                    <Label for="cremalheira_width" class="dark:text-gray-200">Largura da Cremalheira (cm)</Label>
+                    <Input id="cremalheira_width" type="number" v-model="formLocal.cremalheira_width" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Largura da coluna vertical (cremalheira)</p>
                 </div>
             </div>
         </div>
 
         <!-- Configuração dos Furos -->
         <div class="space-y-2">
-            <h4 class="text-sm font-medium">Configuração dos Furos</h4>
+            <h4 class="text-sm font-medium dark:text-gray-200">Configuração dos Furos</h4>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div class="space-y-2">
-                    <Label for="hole_height">Altura do Furo (cm)</Label>
-                    <Input id="hole_height" type="number" v-model="formLocal.hole_height" min="1" @change="updateForm" />
+                    <Label for="hole_height" class="dark:text-gray-200">Altura do Furo (cm)</Label>
+                    <Input id="hole_height" type="number" v-model="formLocal.hole_height" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="hole_width">Largura do Furo (cm)</Label>
-                    <Input id="hole_width" type="number" v-model="formLocal.hole_width" min="1" @change="updateForm" />
+                    <Label for="hole_width" class="dark:text-gray-200">Largura do Furo (cm)</Label>
+                    <Input id="hole_width" type="number" v-model="formLocal.hole_width" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="hole_spacing">Espaçamento entre Furos (cm)</Label>
-                    <Input id="hole_spacing" type="number" v-model="formLocal.hole_spacing" min="1" @change="updateForm" />
-                    <p class="text-xs text-gray-500">Distância vertical entre furos</p>
+                    <Label for="hole_spacing" class="dark:text-gray-200">Espaçamento entre Furos (cm)</Label>
+                    <Input id="hole_spacing" type="number" v-model="formLocal.hole_spacing" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Distância vertical entre furos</p>
                 </div>
             </div>
         </div>
 
         <!-- Visualização da Cremalheira -->
-        <div class="mt-5 rounded-lg border bg-gray-50 p-4">
+        <div class="mt-5 rounded-lg border bg-gray-50 p-4 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-center">
                 <div class="relative">
                     <!-- Cremalheira (representação visual) -->
                     <div
-                        class="relative bg-gray-400"
+                        class="relative bg-gray-400 dark:bg-gray-500"
                         :style="{
                             width: `${formLocal.cremalheira_width * 2}px`,
                             height: '200px',
@@ -57,7 +57,7 @@
                         <div
                             v-for="i in Math.floor(200 / (formLocal.hole_height * 2 + formLocal.hole_spacing * 2))"
                             :key="i"
-                            class="absolute left-1/2 -translate-x-1/2 transform rounded-full border border-gray-300 bg-white"
+                            class="absolute left-1/2 -translate-x-1/2 transform rounded-full border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-300"
                             :style="{
                                 width: `${formLocal.hole_width * 2}px`,
                                 height: `${formLocal.hole_height * 2}px`,
@@ -69,8 +69,8 @@
             </div>
         </div>
 
-        <div class="rounded-lg border border-blue-100 bg-blue-50 p-4">
-            <p class="text-sm text-blue-800">
+        <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
                 <span class="font-medium">Dica:</span> A cremalheira é a estrutura vertical com furos onde as prateleiras são encaixadas. O
                 espaçamento entre os furos determina as posições possíveis para as prateleiras.
             </p>

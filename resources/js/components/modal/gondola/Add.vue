@@ -1,12 +1,12 @@
 <template>
     <Dialog :open="isOpen" @update:open="updateOpen">
-        <DialogContent class="flex max-h-[90vh] w-full max-w-4xl flex-col p-0">
+        <DialogContent class="flex max-h-[90vh] w-full max-w-4xl flex-col p-0 dark:border-gray-700 dark:bg-gray-800">
             <!-- Cabeçalho Fixo -->
-            <div class="border-b p-4">
+            <div class="border-b p-4 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
-                        <DialogTitle class="text-xl font-semibold">{{ passoTitulos[passoAtual] }}</DialogTitle>
-                        <DialogDescription>{{ passoDescricoes[passoAtual] }}</DialogDescription>
+                        <DialogTitle class="text-xl font-semibold dark:text-gray-100">{{ passoTitulos[passoAtual] }}</DialogTitle>
+                        <DialogDescription class="dark:text-gray-300">{{ passoDescricoes[passoAtual] }}</DialogDescription>
                     </div>
                 </div>
 
@@ -16,8 +16,8 @@
                         <div
                             class="flex h-8 w-8 flex-none items-center justify-center rounded-full text-sm font-medium"
                             :class="{
-                                'bg-black text-white': passoAtual >= index,
-                                'bg-gray-200 text-gray-700': passoAtual < index,
+                                'bg-black text-white dark:bg-primary': passoAtual >= index,
+                                'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200': passoAtual < index,
                             }"
                         >
                             <CheckIcon v-if="passoAtual > index" class="h-4 w-4" />
@@ -26,14 +26,14 @@
                         <div
                             v-if="index < passoTitulos.length - 1"
                             class="mx-2 h-1 flex-1"
-                            :class="{ 'bg-black': passoAtual > index, 'bg-gray-300': passoAtual <= index }"
+                            :class="{ 'bg-black dark:bg-primary': passoAtual > index, 'bg-gray-300 dark:bg-gray-600': passoAtual <= index }"
                         ></div>
                     </template>
                 </div>
             </div>
 
             <!-- Área de Conteúdo com Rolagem -->
-            <div class="flex-1 overflow-y-auto p-4">
+            <div class="flex-1 overflow-y-auto p-4 dark:bg-gray-800">
                 <!-- Componentes de cada passo -->
                 <StepGondola v-if="passoAtual === 0" :form-data="formData" @update:form="updateForm" />
 
@@ -49,14 +49,14 @@
             </div>
 
             <!-- Rodapé Fixo -->
-            <div class="flex justify-between border-t bg-white p-4">
-                <Button v-if="passoAtual > 0" variant="outline" @click="passoAtual--"> <ChevronLeftIcon class="mr-2 h-4 w-4" /> Anterior </Button>
+            <div class="flex justify-between border-t bg-white p-4 dark:bg-gray-800 dark:border-gray-700">
+                <Button v-if="passoAtual > 0" variant="outline" @click="passoAtual--" class="dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"> <ChevronLeftIcon class="mr-2 h-4 w-4" /> Anterior </Button>
                 <div v-else>
-                    <Button variant="outline" @click="fecharModal">Cancelar</Button>
+                    <Button variant="outline" @click="fecharModal" class="dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">Cancelar</Button>
                 </div>
 
-                <Button v-if="passoAtual < passoTitulos.length - 1" @click="passoAtual++"> Próximo <ChevronRightIcon class="ml-2 h-4 w-4" /> </Button>
-                <Button v-else @click="enviarFormulario" :disabled="enviando">
+                <Button v-if="passoAtual < passoTitulos.length - 1" @click="passoAtual++" class="dark:hover:bg-primary-800"> Próximo <ChevronRightIcon class="ml-2 h-4 w-4" /> </Button>
+                <Button v-else @click="enviarFormulario" :disabled="enviando" class="dark:hover:bg-primary-800">
                     <SaveIcon v-if="!enviando" class="mr-2 h-4 w-4" />
                     <Loader2Icon v-else class="mr-2 h-4 w-4 animate-spin" />
                     Salvar
@@ -301,3 +301,27 @@ const enviarFormulario = () => {
 };
  
 </script>
+
+<style scoped>
+/* Estilos para a barra de rolagem no modo escuro */
+@media (prefers-color-scheme: dark) {
+    .overflow-y-auto {
+        scrollbar-width: thin;
+        scrollbar-color: #4b5563 #1f2937;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+        border-radius: 4px;
+    }
+}
+</style>

@@ -6,8 +6,8 @@
         <!-- Área central rolável (vertical e horizontal) -->
         <div class="flex h-full w-full flex-col gap-6 overflow-x-auto overflow-y-auto">
             <Tabs v-model="selectedGondolaId" class="w-full" v-if="gondolas.length">
-                <TabsList class="sticky top-0 z-10 flex items-center justify-around bg-white">
-                    <TabsTrigger v-for="gondola in gondolas" :key="gondola.id" :value="gondola.id" class="w-full truncate text-sm">
+                <TabsList class="sticky top-0 z-10 flex items-center justify-around bg-white dark:bg-gray-800">
+                    <TabsTrigger v-for="gondola in gondolas" :key="gondola.id" :value="gondola.id" class="w-full truncate text-sm dark:text-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
                         {{ gondola.name }}
                     </TabsTrigger>
                 </TabsList>
@@ -20,7 +20,7 @@
                         @update:invertOrder="updateInvertOrder"
                         @update:category="updateCategory"
                     />
-                    <div class="w-full flex-col gap-6 overflow-visible border md:flex-row">
+                    <div class="w-full flex-col gap-6 overflow-visible border dark:border-gray-700 md:flex-row">
                         <!-- Area de trabalho -->
                         <MovableContainer :storage-id="gondola.id" :scale-factor="gondola.scale_factor">
                             <Sections
@@ -37,22 +37,22 @@
             </Tabs>
             <div
                 v-else
-                class="flex h-full w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8"
+                class="flex h-full w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 dark:border-gray-700 dark:bg-gray-800"
             >
                 <div class="text-center">
                     <div class="relative mx-auto mb-4 h-24 w-24">
-                        <ShoppingBagIcon class="mx-auto h-16 w-16 text-gray-400" />
+                        <ShoppingBagIcon class="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500" />
                         <span class="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-white">
                             <PlusIcon class="h-4 w-4" />
                         </span>
                     </div>
-                    <h3 class="text-lg font-medium text-gray-900">Nenhuma gôndola encontrada</h3>
-                    <p class="mt-2 max-w-md text-sm text-gray-500">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Nenhuma gôndola encontrada</h3>
+                    <p class="mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
                         As gôndolas são essenciais para organizar seus produtos no planograma. Adicione sua primeira gôndola para começar a criar o
                         layout perfeito para sua loja.
                     </p>
                     <div class="mt-6">
-                        <Button @click="$emit('add-gondola')" size="default" class="shadow-sm">
+                        <Button @click="$emit('add-gondola')" size="default" class="shadow-sm dark:bg-gray-700 dark:text-gray-100">
                             <PlusIcon class="mr-2 h-4 w-4" />
                             Adicionar Gôndola
                         </Button>
@@ -62,22 +62,22 @@
         </div>
 
         <!-- Barra lateral direita fixa -->
-        <div class="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50">
-            <div class="border-b border-gray-200 bg-white p-3">
-                <h3 class="text-center text-lg font-medium text-gray-800">Propriedades</h3>
+        <div class="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+            <div class="border-b border-gray-200 bg-white p-3 dark:bg-gray-800 dark:border-gray-700">
+                <h3 class="text-center text-lg font-medium text-gray-800 dark:text-gray-100">Propriedades</h3>
             </div>
             <div class="flex-1 p-3">
-                <div v-if="selectedProducts.length" class="rounded-md bg-white p-3 shadow-sm">
-                    {{ selectedProducts.length }} produto(s) selecionado(s)
+                <div v-if="selectedProducts.length" class="rounded-md bg-white p-3 shadow-sm dark:bg-gray-700">
+                    <p class="text-gray-800 dark:text-gray-200">{{ selectedProducts.length }} produto(s) selecionado(s)</p>
                     <div v-for="product in selectedProducts" :key="product.id" class="flex items-center gap-2">
-                        <img :src="product.image_url" alt="" class="h-16 w-16 rounded-md object-cover" />
+                        <img :src="product.image_url" alt="" class="h-16 w-16 rounded-md object-cover border dark:border-gray-600" />
                         <div class="flex flex-col">
-                            <h4 class="text-sm font-medium text-gray-800">{{ product.name }}</h4>
-                            <p class="text-xs text-gray-500">SKU: {{ product.sku }}</p>
+                            <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ product.name }}</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ product.sku }}</p>
                         </div>
                     </div> 
                 </div>
-                <div v-else class="flex h-full items-center justify-center p-4 text-center text-gray-400">
+                <div v-else class="flex h-full items-center justify-center p-4 text-center text-gray-400 dark:text-gray-500">
                     Selecione um produto para ver suas propriedades
                 </div>
             </div>
@@ -321,5 +321,26 @@ onMounted(async () => {
 .overflow-x-auto::-webkit-scrollbar-thumb {
     background-color: #e2e8f0;
     border-radius: 4px;
+}
+
+/* Estilos para o modo escuro da barra de rolagem */
+@media (prefers-color-scheme: dark) {
+    .overflow-y-auto {
+        scrollbar-color: #4b5563 #1f2937;
+    }
+    
+    .overflow-x-auto {
+        scrollbar-color: #4b5563 #1f2937;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-track,
+    .overflow-x-auto::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+    
+    .overflow-y-auto::-webkit-scrollbar-thumb,
+    .overflow-x-auto::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+    }
 }
 </style>

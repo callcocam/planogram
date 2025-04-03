@@ -1,10 +1,10 @@
 <template>
     <div class="space-y-4">
         <div class="mb-4 flex items-center">
-            <div class="rounded-full bg-gray-100 p-2">
-                <RulerIcon class="h-5 w-5" />
+            <div class="rounded-full bg-gray-100 p-2 dark:bg-gray-700">
+                <RulerIcon class="h-5 w-5 dark:text-gray-200" />
             </div>
-            <h3 class="ml-2 text-lg font-medium">Configurar prateleiras e Gancheiras:</h3>
+            <h3 class="ml-2 text-lg font-medium dark:text-gray-100">Configurar prateleiras e Gancheiras:</h3>
         </div>
 
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -12,45 +12,47 @@
             <div class="space-y-4">
                 <!-- Dimensões das Prateleiras -->
                 <div class="space-y-2">
-                    <h4 class="text-sm font-medium">Dimensões e Especificações:</h4>
+                    <h4 class="text-sm font-medium dark:text-gray-200">Dimensões e Especificações:</h4>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="shelf_height">Espessura (cm)</Label>
-                            <Input id="shelf_height" type="number" v-model="formLocal.shelf_height" min="1" @change="updateForm" />
+                            <Label for="shelf_height" class="dark:text-gray-200">Espessura (cm)</Label>
+                            <Input id="shelf_height" type="number" v-model="formLocal.shelf_height" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="shelf_width">Largura (cm)</Label>
-                            <Input id="shelf_width" type="number" v-model="formLocal.shelf_width" min="1" @change="updateForm" />
+                            <Label for="shelf_width" class="dark:text-gray-200">Largura (cm)</Label>
+                            <Input id="shelf_width" type="number" v-model="formLocal.shelf_width" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="shelf_depth">Profundidade (cm)</Label>
-                            <Input id="shelf_depth" type="number" v-model="formLocal.shelf_depth" min="1" @change="updateForm" />
+                            <Label for="shelf_depth" class="dark:text-gray-200">Profundidade (cm)</Label>
+                            <Input id="shelf_depth" type="number" v-model="formLocal.shelf_depth" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="num_shelves">N° de prateleiras</Label>
-                            <Input id="num_shelves" type="number" v-model="formLocal.num_shelves" min="1" @change="updateForm" />
+                            <Label for="num_shelves" class="dark:text-gray-200">N° de prateleiras</Label>
+                            <Input id="num_shelves" type="number" v-model="formLocal.num_shelves" min="1" @change="updateForm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Tipo de Produto -->
                 <div class="space-y-2">
-                    <Label>Tipo de Produto</Label>
+                    <Label class="dark:text-gray-200">Tipo de Produto</Label>
                     <div class="grid grid-cols-2 gap-2">
                         <Button
                             :variant="formLocal.product_type === 'normal' ? 'default' : 'outline'"
                             @click="setProductType('normal')"
-                            class="justify-center"
+                            class="justify-center dark:text-gray-100 dark:border-gray-600"
+                            :class="{'dark:bg-primary dark:text-white': formLocal.product_type === 'normal', 'dark:bg-gray-700 dark:hover:bg-gray-600': formLocal.product_type !== 'normal'}"
                         >
                             Normal
                         </Button>
                         <Button
                             :variant="formLocal.product_type === 'penduravel' ? 'default' : 'outline'"
                             @click="setProductType('penduravel')"
-                            class="justify-center"
+                            class="justify-center dark:text-gray-100 dark:border-gray-600"
+                            :class="{'dark:bg-primary dark:text-white': formLocal.product_type === 'penduravel', 'dark:bg-gray-700 dark:hover:bg-gray-600': formLocal.product_type !== 'penduravel'}"
                         >
                             Pendurável
                         </Button>
@@ -58,17 +60,17 @@
                 </div>
 
                 <!-- Dica -->
-                <div class="rounded-lg border border-blue-100 bg-blue-50 p-4">
-                    <p class="text-sm text-blue-800">
+                <div class="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-300">
                         <span class="font-medium">Dica:</span> As dimensões da gôndola e da seção podem ser diferentes. Certifique-se de que as
                         medidas são compatíveis para um correto encaixe no planograma.
                     </p>
                 </div>
 
                 <!-- Informações de cálculo -->
-                <div class="space-y-2 rounded-lg border border-gray-200 p-4">
-                    <h4 class="text-sm font-medium">Cálculos e Dimensões</h4>
-                    <div class="space-y-1 text-sm">
+                <div class="space-y-2 rounded-lg border border-gray-200 p-4 dark:border-gray-700 dark:bg-gray-800">
+                    <h4 class="text-sm font-medium dark:text-gray-200">Cálculos e Dimensões</h4>
+                    <div class="space-y-1 text-sm dark:text-gray-300">
                         <div class="flex justify-between">
                             <span>Altura total:</span>
                             <span>{{ formLocal.height || 180 }}cm</span>
@@ -87,13 +89,13 @@
 
             <!-- Pré-visualização à direita -->
             <div class="space-y-4">
-                <h4 class="text-sm font-medium">Pré-visualização:</h4>
+                <h4 class="text-sm font-medium dark:text-gray-200">Pré-visualização:</h4>
 
                 <!-- Visualização da gôndola com prateleiras -->
-                <div class="relative flex h-[400px] flex-col items-center rounded-lg border bg-gray-50 p-4">
+                <div class="relative flex h-[400px] flex-col items-center rounded-lg border bg-gray-50 p-4 dark:bg-gray-800 dark:border-gray-700">
                     <!-- Container para a gôndola proporcional -->
                     <div
-                        class="relative h-full border border-gray-400 bg-white shadow-md"
+                        class="relative h-full border border-gray-400 bg-white shadow-md dark:border-gray-600 dark:bg-gray-700"
                         :style="{
                             width: `${130}px`,
                             maxHeight: '360px',
@@ -101,7 +103,7 @@
                     >
                         <!-- Base da gôndola -->
                         <div
-                            class="absolute bottom-0 left-0 right-0 border-t border-gray-500 bg-gray-300"
+                            class="absolute bottom-0 left-0 right-0 border-t border-gray-500 bg-gray-300 dark:border-gray-600 dark:bg-gray-600"
                             :style="{
                                 height: `${((formLocal.base_height || 17) / (formLocal.height || 180)) * 360}px`,
                             }"
@@ -109,7 +111,7 @@
 
                         <!-- Colunas laterais (cremalheiras) -->
                         <div
-                            class="absolute bottom-0 left-0 top-0 w-1 bg-gray-600"
+                            class="absolute bottom-0 left-0 top-0 w-1 bg-gray-600 dark:bg-gray-500"
                             :style="{
                                 width: `${formLocal.cremalheira_width || 4}px`,
                             }"
@@ -121,7 +123,7 @@
                                         ((formLocal.hole_spacing || 2) + (formLocal.hole_height || 2)),
                                 )"
                                 :key="`left-${i}`"
-                                class="absolute left-0 h-1 w-2 bg-white"
+                                class="absolute left-0 h-1 w-2 bg-white dark:bg-gray-300"
                                 :style="{
                                     height: `${formLocal.hole_height || 2}px`,
                                     width: `${formLocal.hole_width || 2}px`,
@@ -131,7 +133,7 @@
                         </div>
 
                         <div
-                            class="absolute bottom-0 right-0 top-0 w-1 bg-gray-600"
+                            class="absolute bottom-0 right-0 top-0 w-1 bg-gray-600 dark:bg-gray-500"
                             :style="{
                                 width: `${formLocal.cremalheira_width || 4}px`,
                             }"
@@ -143,7 +145,7 @@
                                         ((formLocal.hole_spacing || 2) + (formLocal.hole_height || 2)),
                                 )"
                                 :key="`right-${i}`"
-                                class="absolute right-0 h-1 w-2 bg-white"
+                                class="absolute right-0 h-1 w-2 bg-white dark:bg-gray-300"
                                 :style="{
                                     height: `${formLocal.hole_height || 2}px`,
                                     width: `${formLocal.hole_width || 2}px`,
@@ -156,7 +158,7 @@
                         <div
                             v-for="i in parseInt(formLocal.num_shelves || 5)"
                             :key="`shelf-${i}`"
-                            class="absolute left-0 right-0 border border-gray-400 bg-gray-200"
+                            class="absolute left-0 right-0 border border-gray-400 bg-gray-200 dark:border-gray-600 dark:bg-gray-400"
                             :style="{
                                 height: `${((formLocal.shelf_height || 4) / (formLocal.height || 180)) * 360}px`,
                                 bottom:
@@ -170,14 +172,14 @@
                                 <div
                                     v-for="j in 6"
                                     :key="`hook-${i}-${j}`"
-                                    class="absolute bottom-full bg-gray-500"
+                                    class="absolute bottom-full bg-gray-500 dark:bg-gray-400"
                                     :style="{
                                         width: '2px',
                                         height: '10px',
                                         left: `${j * 20 - 10}px`,
                                     }"
                                 >
-                                    <div class="absolute top-0 h-1 w-3 bg-gray-500" style="left: -3px; transform: rotate(45deg)"></div>
+                                    <div class="absolute top-0 h-1 w-3 bg-gray-500 dark:bg-gray-400" style="left: -3px; transform: rotate(45deg)"></div>
                                 </div>
                             </template>
                         </div>
@@ -185,22 +187,22 @@
                 </div>
 
                 <!-- Legenda -->
-                <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="grid grid-cols-2 gap-2 text-xs dark:text-gray-300">
                     <div class="flex items-center">
-                        <div class="mr-1 h-3 w-3 border border-gray-400 bg-gray-200"></div>
+                        <div class="mr-1 h-3 w-3 border border-gray-400 bg-gray-200 dark:border-gray-600 dark:bg-gray-400"></div>
                         <span>Prateleira</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="mr-1 h-3 w-3 bg-gray-300"></div>
+                        <div class="mr-1 h-3 w-3 bg-gray-300 dark:bg-gray-600"></div>
                         <span>Base</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="mr-1 h-3 w-3 bg-gray-600"></div>
+                        <div class="mr-1 h-3 w-3 bg-gray-600 dark:bg-gray-500"></div>
                         <span>Cremalheira</span>
                     </div>
                     <div v-if="formLocal.product_type === 'penduravel'" class="flex items-center">
                         <div class="relative h-3 w-3">
-                            <div class="absolute bg-gray-500" style="width: 1px; height: 3px"></div>
+                            <div class="absolute bg-gray-500 dark:bg-gray-400" style="width: 1px; height: 3px"></div>
                         </div>
                         <span class="ml-1">Gancheira</span>
                     </div>
