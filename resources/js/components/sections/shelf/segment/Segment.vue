@@ -9,7 +9,7 @@
         draggable="true"
         tabindex="0"
     >
-        <!-- Contador de layers visível quando selecionado -->
+        <!-- Stack counter visible when selected -->
         <div v-if="segmentSelected" class="absolute -top-6 left-0 w-full rounded-t-md bg-blue-600 px-2 py-1 text-xs text-white">
             Pilhas: {{ segment.quantity }}
         </div>
@@ -35,7 +35,7 @@ import Layer from './Layer.vue';
 const { toast } = useToast();
 
 // ----------------------------------------------------
-// Props e Emits
+// Props and Emits
 // ----------------------------------------------------
 const props = defineProps({
     shelf: {
@@ -59,46 +59,48 @@ const props = defineProps({
 const emit = defineEmits(['segment-select', 'segment-drag', 'update:quantity']);
 
 // ----------------------------------------------------
-// Estado do componente
+// Component State
 // ----------------------------------------------------
-/** Referência ao elemento DOM do segmento */
+/** DOM reference to the segment element */
 const segmentRef = ref(null) as any;
 
-/** Estado de seleção do segmento */
+/** Segment selection state */
 const segmentSelected = ref(false);
 
-/** ID único para este segmento - usado para comunicação entre segmentos */
+/** Unique ID for this segment - used for communication between segments */
 const segmentId = ref(`segment-${props.segment.id || Math.random().toString(36).substring(2, 9)}`);
 
-/** Nome do evento customizado para comunicação entre segmentos */
-const SEGMENT_SELECTED_EVENT = 'segment-selected';
-
-// Referência para o timer de debounce
-const debounceTimer = ref<any>(null);
-// ----------------------------------------------------
-// Propriedades computadas
-// ----------------------------------------------------
-/**
- * Retorna a quantidade de segmentos e gerencia o estado de seleção
- * com base na categoria selecionada
- */
+/** Segment quantity (number of layers) */
 const segmentQuantity = ref(props.segment.quantity);
 
+/** Custom event name for inter-segment communication */
+const SEGMENT_SELECTED_EVENT = 'segment-selected';
+
+/** Debounce timer reference */
+const debounceTimer = ref<any>(null);
+
+// ----------------------------------------------------
+// Watchers
+// ----------------------------------------------------
+/**
+ * Watch for changes in selected category and update selection state
+ */
 watch(
     () => props.selectedCategory,
     (newCategory) => {
         if (!newCategory) {
-            // Se a categoria selecionada for nula, reseta o estado de seleção
+            // Reset selection state when category is null
             segmentSelected.value = false;
             return;
         }
-        // Se a categoria selecionada não for nula, atualiza o estado de seleção
+
+        // Check if this segment's product belongs to the selected category
         const isCategoryMatch = props.segment.layer.product.category_id === newCategory.id;
 
-        // Atualiza o estado de seleção do segmento
+        // Update segment selection state
         segmentSelected.value = isCategoryMatch;
 
-        // Emite evento de seleção para o componente pai
+        // Notify parent component about the selection
         emit('segment-select', {
             ...props.segment,
             product: props.segment.layer.product,
@@ -109,28 +111,18 @@ watch(
     },
 );
 
+// ----------------------------------------------------
+// Computed Properties
+// ----------------------------------------------------
 /**
- * Função de debounce que atrasa a execução de uma função
- * @param {Function} fn - Função a ser executada após o delay
- * @param {Number} delay - Tempo de espera em ms
- */
-const debounce = (fn, delay = 300) => {
-    if (debounceTimer.value) clearTimeout(debounceTimer.value);
-    debounceTimer.value = setTimeout(() => {
-        fn();
-        debounceTimer.value = null;
-    }, delay);
-};
-
-/**
- * Calcula o estilo do segmento com base nas propriedades e estado de seleção
+ * Calculate segment style based on properties and selection state
  */
 const segmentStyle = computed(() => {
-    // Calcula as dimensões do segmento
+    // Calculate segment dimensions
     const layerHeight = props.segment.layer.product.height * segmentQuantity.value * props.scaleFactor;
     const layerWidth = props.segment.layer.product.width * props.shelf.quantity * props.scaleFactor;
 
-    // Estilo condicional quando o segmento está selecionado
+    // Conditional style when segment is selected
     const selectedStyle = segmentSelected.value
         ? {
               border: '2px solid blue',
@@ -139,7 +131,7 @@ const segmentStyle = computed(() => {
           }
         : {};
 
-    // Retorna o estilo completo
+    // Return complete style object
     return {
         height: `${layerHeight}px`,
         width: `${layerWidth}px`,
@@ -149,18 +141,32 @@ const segmentStyle = computed(() => {
 });
 
 // ----------------------------------------------------
-// Funções para manipular a quantidade de layers
+// Utility Functions
 // ----------------------------------------------------
 /**
- * Aumenta a quantidade de layers em um segmento
+ * Debounce function to delay execution
+ * @param {Function} fn - Function to execute after delay
+ * @param {Number} delay - Delay time in ms
+ */
+const debounce = (fn: Function, delay = 300) => {
+    if (debounceTimer.value) clearTimeout(debounceTimer.value);
+    debounceTimer.value = setTimeout(() => {
+        fn();
+        debounceTimer.value = null;
+    }, delay);
+};
+
+// ----------------------------------------------------
+// Layer Quantity Management
+// ----------------------------------------------------
+/**
+ * Increase the number of layers in a segment
  */
 const onIncreaseQuantity = () => {
     if (!segmentSelected.value) return;
 
-    // Incrementa o valor imediatamente na UI
     const currentQuantity = segmentQuantity.value;
 
-    // Debounce na emissão do evento para o componente pai
     debounce(() => {
         // @ts-ignore
         window.axios
@@ -170,10 +176,9 @@ const onIncreaseQuantity = () => {
                 quantity: currentQuantity + 1,
             })
             .then((response) => {
-                // Atualiza a quantidade no componente pai
                 segmentQuantity.value++;
                 const { description, title, variant } = response.data;
-                // Atualiza a quantidade no componente pai
+
                 toast({
                     title,
                     description,
@@ -191,103 +196,100 @@ const onIncreaseQuantity = () => {
 };
 
 /**
- * Diminui a quantidade de layers em um segmento
+ * Decrease the number of layers in a segment
  */
 const onDecreaseQuantity = () => {
-    if (!segmentSelected.value) return;
-    if (segmentQuantity.value > 1) {
-        // Decrementa o valor imediatamente na UI
-        // Incrementa o valor imediatamente na UI
-        const currentQuantity = segmentQuantity.value;
+    if (!segmentSelected.value || segmentQuantity.value <= 1) return;
 
-        // Debounce na emissão do evento para o componente pai
-        debounce(() => {
+    const currentQuantity = segmentQuantity.value;
+
+    debounce(() => {
+        // @ts-ignore
+        window.axios
             // @ts-ignore
-            window.axios
-                // @ts-ignore
-                .put(route('planogram.api.segments.update', props.segment.id), {
-                    decreaseQuantity: true,
-                    quantity: currentQuantity - 1,
-                })
-                .then((response) => {
-                    // Atualiza a quantidade no componente pai
-                    segmentQuantity.value--;
-                    const { description, title, variant } = response.data;
-                    // Atualiza a quantidade no componente pai
-                    toast({
-                        title,
-                        description,
-                        variant,
-                    });
-                })
-                .catch((error) => {
-                    toast({
-                        title: 'Erro ao atualizar a quantidade do segmento',
-                        description: error.response.data.message,
-                        variant: 'destructive',
-                    });
+            .put(route('planogram.api.segments.update', props.segment.id), {
+                decreaseQuantity: true,
+                quantity: currentQuantity - 1,
+            })
+            .then((response) => {
+                segmentQuantity.value--;
+                const { description, title, variant } = response.data;
+
+                toast({
+                    title,
+                    description,
+                    variant,
                 });
-        });
-    }
+            })
+            .catch((error) => {
+                toast({
+                    title: 'Erro ao atualizar a quantidade do segmento',
+                    description: error.response.data.message,
+                    variant: 'destructive',
+                });
+            });
+    });
 };
 
 // ----------------------------------------------------
-// Manipuladores de eventos
+// Event Handlers
 // ----------------------------------------------------
 /**
- * Gerencia o clique no segmento
- * @param {MouseEvent} event - O evento de clique
+ * Handle segment click
+ * @param {MouseEvent} event - Click event
  */
-const segmentClick = (event) => {
-    // Evita a propagação do evento para os elementos pai
+const segmentClick = (event: MouseEvent) => {
+    // Prevent event propagation to parent elements
     event.stopPropagation();
 
-    // Verifica se está em modo multi-seleção (Ctrl/Cmd pressionado)
+    // Check if in multi-select mode (Ctrl/Cmd pressed)
     const isMultiSelect = event.ctrlKey || event.metaKey;
 
-    // Atualiza o estado de seleção
+    // Update selection state
     if (isMultiSelect) {
-        // No modo multi-seleção, inverte o estado atual
+        // In multi-select mode, toggle current state
         segmentSelected.value = !segmentSelected.value;
     } else {
-        // No modo normal, seleciona este segmento
+        // In normal mode, select this segment
         segmentSelected.value = true;
     }
 
-    // Notifica outros segmentos sobre a seleção
+    // Notify other segments about the selection
     notifyOtherSegments(isMultiSelect);
 
-    // Notifica o componente pai sobre a seleção
+    // Notify parent component about the selection
     notifyParent(isMultiSelect);
 
-    // Foca no elemento para permitir eventos de teclado
+    // Focus element to enable keyboard events
     if (segmentRef.value && segmentSelected.value) {
         segmentRef.value.focus();
     }
 };
 
 /**
- * Manipula o início do arraste
- * @param {DragEvent} event - O evento de arraste
+ * Handle drag start
+ * @param {DragEvent} event - Drag event
  */
-const onDragstart = (event) => {
-    // Configure o dataTransfer para transferir os dados do segmento
+const onDragstart = (event: DragEvent) => {
+    if (!event.dataTransfer) return;
+
+    // Set up dataTransfer to transfer segment data
     event.dataTransfer.setData('text/segment', JSON.stringify(props.segment));
     event.dataTransfer.effectAllowed = 'move';
 
-    // Aplicar estilos visuais durante o arrasto
+    // Apply visual styles during drag
     if (segmentRef.value) {
         segmentRef.value.style.opacity = '0.5';
         segmentRef.value.style.zIndex = '10';
     }
 
-    // Emitir evento para o componente pai
+    // Emit event to parent component
     emit('segment-drag', {
         segment: props.segment,
         action: 'start',
     });
 
-    // Criar uma imagem de arrasto personalizada (opcional)
+    // Create custom drag image
     try {
         const rect = segmentRef.value.getBoundingClientRect();
         const ghostEl = document.createElement('div');
@@ -306,25 +308,27 @@ const onDragstart = (event) => {
             document.body.removeChild(ghostEl);
         }, 0);
     } catch (error) {
-        console.error('Erro ao criar imagem de arrasto:', error);
+        console.error('Error creating drag image:', error);
     }
 };
 
 /**
- * Manipula o fim do arraste
- * @param {DragEvent} event - O evento de arraste
+ * Handle drag end
+ * @param {DragEvent} event - Drag event
  */
-const onDragend = (event) => {
-    // Restaurar estilos visuais
+const onDragend = (event: DragEvent) => {
+    if (!event.dataTransfer) return;
+
+    // Restore visual styles
     if (segmentRef.value) {
         segmentRef.value.style.opacity = '1';
         segmentRef.value.style.zIndex = '1';
     }
 
-    // Limpar os dados de transferência
+    // Clear transfer data
     event.dataTransfer.clearData();
 
-    // Emitir evento para o componente pai
+    // Emit event to parent component
     emit('segment-drag', {
         segment: props.segment,
         action: 'end',
@@ -332,14 +336,14 @@ const onDragend = (event) => {
 };
 
 /**
- * Notifica outros segmentos sobre a seleção através de um evento personalizado
- * @param {boolean} isMultiSelect - Indica se está no modo de multi-seleção
+ * Notify other segments about this selection via custom event
+ * @param {boolean} isMultiSelect - Indicates if in multi-select mode
  */
-const notifyOtherSegments = (isMultiSelect) => {
+const notifyOtherSegments = (isMultiSelect: boolean) => {
     const customEvent = new CustomEvent(SEGMENT_SELECTED_EVENT, {
         detail: {
             segmentId: segmentId.value,
-            isMultiSelect: isMultiSelect,
+            isMultiSelect,
         },
     });
 
@@ -347,65 +351,73 @@ const notifyOtherSegments = (isMultiSelect) => {
 };
 
 /**
- * Notifica o componente pai sobre a seleção
- * @param {boolean} isMultiSelect - Indica se está no modo de multi-seleção
+ * Notify parent component about the selection
+ * @param {boolean} isMultiSelect - Indicates if in multi-select mode
  */
-const notifyParent = (isMultiSelect) => {
+const notifyParent = (isMultiSelect: boolean) => {
     emit('segment-select', {
         ...props.segment,
         product: props.segment.layer.product,
-        isMultiSelect: isMultiSelect,
+        isMultiSelect,
         segmentSelected: segmentSelected.value,
         category: false,
     });
 };
 
 /**
- * Manipula eventos de seleção de outros segmentos
- * @param {string} selectedId - ID do segmento selecionado
- * @param {boolean} isMultiSelect - Indica se está no modo de multi-seleção
+ * Handle selection events from other segments
+ * @param {string} selectedId - ID of the selected segment
+ * @param {boolean} isMultiSelect - Indicates if in multi-select mode
  */
-const handleSegmentSelection = (selectedId, isMultiSelect) => {
-    // Se não for multi-seleção e outro segmento foi selecionado, deseleciona este
+const handleSegmentSelection = (selectedId: string, isMultiSelect: boolean) => {
+    // Deselect this segment if not in multi-select mode and another segment was selected
     if (!isMultiSelect && selectedId !== segmentId.value) {
         segmentSelected.value = false;
     }
 };
 
 /**
- * Função de callback para o evento personalizado
- * @param {Event} e - Evento recebido
+ * Callback function for the custom event
+ * @param {Event} e - Received event
  */
-const segmentSelectionHandler = (e) => {
+const segmentSelectionHandler = (e: Event) => {
     const customEvent = e as CustomEvent;
     handleSegmentSelection(customEvent.detail.segmentId, customEvent.detail.isMultiSelect);
 };
 
-// ----------------------------------------------------
-// Lifecycle hooks
-// ----------------------------------------------------
-// Registra o ouvinte de eventos quando o componente é montado
-onMounted(() => {
-    window.addEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
-
-    // Adiciona listener de teclado para o documento inteiro
-    document.addEventListener('keydown', (event) => {
-        if (segmentSelected.value) {
-            if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                onIncreaseQuantity();
-            } else if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                onDecreaseQuantity();
-            }
+/**
+ * Handle keyboard events for quantity adjustment
+ * @param {KeyboardEvent} event - Keyboard event
+ */
+const handleKeyDown = (event: KeyboardEvent) => {
+    if (segmentSelected.value) {
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            onIncreaseQuantity();
+        } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            onDecreaseQuantity();
         }
-    });
+    }
+};
+
+// ----------------------------------------------------
+// Lifecycle Hooks
+// ----------------------------------------------------
+onMounted(() => {
+    // Register event listeners
+    window.addEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
+    document.addEventListener('keydown', handleKeyDown);
 });
 
-// Remove o ouvinte de eventos quando o componente é desmontado
 onUnmounted(() => {
+    // Clean up event listeners and timers
     window.removeEventListener(SEGMENT_SELECTED_EVENT, segmentSelectionHandler);
-    if (debounceTimer.value) clearTimeout(debounceTimer.value);
+    document.removeEventListener('keydown', handleKeyDown);
+
+    if (debounceTimer.value) {
+        clearTimeout(debounceTimer.value);
+    }
 });
 </script>
 

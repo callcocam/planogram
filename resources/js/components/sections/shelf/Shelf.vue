@@ -11,7 +11,7 @@
             v-model="sortableSegments"
             item-key="id"
             handle=".drag-segment-handle"
-            @end="onSegmentDragEnd"
+            @change="onSegmentDragChange"
             class="relative flex w-full items-end justify-around"
             :style="segmentsContainerStyle"
         >
@@ -172,23 +172,30 @@ const dragStyle = computed(() => {
 // Tratar eventos de arrasto do segmento
 const handleSegmentDrag = (eventData) => {
     // Você pode usar isso para rastreamento ou lógica adicional
-    // console.log(`Segmento ${eventData.segment.id} ${eventData.action}`);
+    console.log(`Segmento ${eventData.segment.id} ${eventData.action}`);
 };
- 
 
-// Função para lidar com o fim do arraste de segmentos
-const onSegmentDragEnd = (event) => {
-    // Se não houver mudança na ordem, não fazemos nada
-    console.log('Evento de drag end:', event.moved);
-    if (!event.moved) {
+// Função para lidar com alterações no arrasto de segmentos
+// Substituindo onSegmentDragEnd por onSegmentDragChange para capturar todos os tipos de alterações
+const onSegmentDragChange = (event) => {
+    console.log('Evento de drag change:', event);
+
+    // Verificar se houve alguma alteração (moved, added ou removed)
+    const hasChanged = event.moved || event.added || event.removed;
+
+    if (!hasChanged) {
         console.log('Sem alteração na ordem');
         return;
     }
 
-    // Aqui temos certeza que a ordem mudou
-    const oldIndex = event.moved.oldIndex;
-    const newIndex = event.moved.newIndex;
-    console.log(`Movido de ${oldIndex} para ${newIndex}`);
+    // Informações de debug sobre a alteração
+    if (event.moved) {
+        console.log(`Movido de ${event.moved.oldIndex} para ${event.moved.newIndex}`);
+    } else if (event.added) {
+        console.log(`Adicionado em ${event.added.newIndex}`);
+    } else if (event.removed) {
+        console.log(`Removido de ${event.removed.oldIndex}`);
+    }
 
     // A reordenação já foi aplicada ao v-model (sortableSegments),
     // mas precisamos garantir que o campo ordering reflita a nova ordem
@@ -211,6 +218,7 @@ const onDrop = (event) => {
     // Verificar se temos um produto ou um segmento sendo solto
     const productData = event.dataTransfer.getData('text/product');
     const segmentData = event.dataTransfer.getData('text/segment');
+
     if (productData) {
         handleProductDrop(productData);
     } else if (segmentData) {
@@ -281,11 +289,11 @@ const handleSegmentDrop = (segmentData) => {
                 shelfId: props.shelf.id,
                 segments: reorderedSegments,
             });
-        } else { 
+        } else {
             const newSegment = {
                 id: segment.id,
                 width: parseInt(segment.width),
-                ordering: segment.ordering,
+                ordering: (sortableSegments.value.length || 0) + 1, // Garante que fique no final
                 quantity: segment.quantity,
                 spacing: segment.spacing,
                 position: segment.position,
@@ -294,7 +302,7 @@ const handleSegmentDrop = (segmentData) => {
                 // Create layer with product information
                 layer: segment.layer,
             };
-           
+
             emit('drop:product', {
                 ...props.shelf,
                 segment: newSegment,

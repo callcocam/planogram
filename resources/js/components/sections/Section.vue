@@ -21,6 +21,7 @@
             @click="$emit('select-shelf', shelf)"
             @segment-select="$emit('segment-select', $event)"
             @update:quantity="$emit('update:quantity', $event)"
+            @update:segments="$emit('update:segments', $event)"
         >
         </Shelf>
     </div>
@@ -51,7 +52,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section', 'segment-select', 'update:quantity']);
+const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section', 'segment-select', 'update:quantity', 'update:segments']);
 
 // Criar ref para prateleiras que podemos modificar com draggable
 const sortableShelves = ref<any[]>([]);

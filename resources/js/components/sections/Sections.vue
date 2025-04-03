@@ -18,6 +18,7 @@
                         @segment-select="$emit('segment-select', $event)"
                         @update-shelves="handleMoveSegmentToSection"
                         @update:quantity="updateSegmentQuantity"
+                        @update:segments="handleMoveSegmentToSection"
                     />
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" v-if="isLastSection(section)" :is-last-section="true" />
                 </div>
