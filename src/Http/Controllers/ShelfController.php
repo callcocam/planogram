@@ -17,7 +17,7 @@ use App\Http\Controllers\Controller;
 use Callcocam\Planogram\Http\Requests\Shelf\StoreShelfRequest;
 use Callcocam\Planogram\Http\Requests\Shelf\UpdateShelfRequest;
 use Callcocam\Planogram\Models\Layer;
-use Callcocam\Planogram\Models\Product;
+use App\Models\Product;
 use Callcocam\Planogram\Models\Section;
 use Callcocam\Planogram\Models\Segment;
 use Callcocam\Planogram\Models\Shelf;
