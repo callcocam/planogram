@@ -1,5 +1,5 @@
 <template>
-    <div class="segment group flex items-end" :style="layerStyle">
+    <div class="segment group flex justify-between" :style="layerStyle">
         <Product
             v-for="(quantity, index) in layerQuantity"
             :key="index"
@@ -82,63 +82,41 @@ const debounce = (fn, delay = 300) => {
 // ----------------------------------------------------
 // Funções para manipular a quantidade de layers
 // ----------------------------------------------------
+
 /**
- * Aumenta a quantidade de layers em um segmento
+ * Manipula a alteração de quantidade de um segmento
+ * @param {string} action - 'increase' ou 'decrease'
  */
-const onIncreaseQuantity = () => {
+const updateLayerQuantity = (action: 'increase' | 'decrease') => {
     if (!segmentSelected.value) return;
 
-    // Incrementa o valor imediatamente na UI
-    const currentQuantity = layerQuantity.value;
+    // Para decremento, verificar se a quantidade é maior que 1
+    if (action === 'decrease' && layerQuantity.value <= 1) return;
+
+    // Calculando a nova quantidade
+    const newQuantity = action === 'increase' ? layerQuantity.value + 1 : layerQuantity.value - 1;
+
+    // Atualiza o UI imediatamente
+    const originalQuantity = layerQuantity.value;
+
+    // Pré-atualiza o valor na interface para feedback imediato
+    if (action === 'increase') {
+        layerQuantity.value++;
+    } else {
+        layerQuantity.value--;
+    }
+
     // Debounce na emissão do evento para o componente pai
-    // @ts-ignore
-    window.axios
-        // @ts-ignore
-        .put(route('planogram.api.layers.update', props.layer.id), {
-            increaseQuantity: true,
-            quantity: currentQuantity + 1,
-        })
-        .then((response) => {
-            // Atualiza a quantidade no componente pai
-            layerQuantity.value++;
-            const { description, title, variant } = response.data;
-            // Atualiza a quantidade no componente pai
-            toast({
-                title,
-                description,
-                variant,
-            });
-        })
-        .catch((error) => {
-            // console.error('Erro ao atualizar a quantidade do segmento:', error);
-            toast({
-                title: 'Erro ao atualizar a quantidade do segmento',
-                description: error.response.data.message,
-                variant: 'destructive',
-            });
-        });
-};
-
-/**
- * Diminui a quantidade de layers em um segmento
- */
-const onDecreaseQuantity = () => {
-    if (!segmentSelected.value) return;
-    if (layerQuantity.value > 1) {
-        // Decrementa o valor imediatamente na UI
-        const currentQuantity = layerQuantity.value - 1;
+    debounce(() => {
         // @ts-ignore
         window.axios
             // @ts-ignore
             .put(route('planogram.api.layers.update', props.layer.id), {
-                decreaseQuantity: true,
-                quantity: currentQuantity,
+                [action === 'increase' ? 'increaseQuantity' : 'decreaseQuantity']: true,
+                quantity: newQuantity,
             })
             .then((response) => {
-                // Atualiza a quantidade no componente pai
-                layerQuantity.value--;
                 const { description, title, variant } = response.data;
-                // Atualiza a quantidade no componente pai
                 toast({
                     title,
                     description,
@@ -146,15 +124,27 @@ const onDecreaseQuantity = () => {
                 });
             })
             .catch((error) => {
+                // Restaura o valor original em caso de erro
+                layerQuantity.value = originalQuantity;
+
                 toast({
                     title: 'Erro ao atualizar a quantidade do segmento',
-                    description: error.response.data.message,
+                    description: error.response?.data?.message || 'Erro desconhecido',
                     variant: 'destructive',
                 });
             });
-        // Debounce na emissão do evento para o componente pai
-    }
+    });
 };
+
+/**
+ * Aumenta a quantidade de layers em um segmento
+ */
+const onIncreaseQuantity = () => updateLayerQuantity('increase');
+
+/**
+ * Diminui a quantidade de layers em um segmento
+ */
+const onDecreaseQuantity = () => updateLayerQuantity('decrease');
 // ----------------------------------------------------
 // Lifecycle hooks
 // ----------------------------------------------------
@@ -168,6 +158,18 @@ onMounted(() => {
                 onIncreaseQuantity();
             } else if (event.key === 'ArrowLeft') {
                 event.preventDefault();
+                onDecreaseQuantity();
+            }
+            //Verifica se a tecla pressionada é a tecla de espaço
+            else if (event.key === ' ') {
+                event.preventDefault();
+                // Chama a função de aumentar a quantidade
+                onIncreaseQuantity();
+            }
+            //Verifica se a tecla pressionada é a tecla de espaço
+            else if (event.key === 'Backspace') {
+                event.preventDefault();
+                // Chama a função de diminuir a quantidade
                 onDecreaseQuantity();
             }
         }

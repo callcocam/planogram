@@ -24,7 +24,13 @@ class Segment extends Model
         'ordering',
         'position',
         'quantity', 
+        'spacing',
+        'settings',
         'status',
+    ];
+
+    protected $casts = [
+        'settings' => 'array',
     ];
 
     public function layer()

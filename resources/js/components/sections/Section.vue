@@ -82,6 +82,7 @@ const sectionStyle = computed(() => {
         borderStyle: draggingSection.value ? 'dashed' : 'solid',
         borderColor: draggingSection.value ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
         backgroundColor: draggingSection.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+        overflow: 'visible'
     };
 });
 

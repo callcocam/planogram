@@ -2,7 +2,7 @@
     <div class="movable-container" ref="containerRef">
         <!-- Todo o componente movable-content torna-se arrastável -->
         <div
-            class="movable-content"
+            class="movable-content flex"
             :style="contentStyle"
             :class="{ 'is-dragging': isDragging }"
             @mousedown="onComponentMouseDown"
@@ -11,7 +11,7 @@
             <!-- A alça de arrasto ainda é mantida para indicação visual -->
 
             <!-- Slot para o conteúdo original (seu SectionList) -->
-            <div class="relative flex border-b4 border-gray-500 dark:border-gray-500">
+            <div class="relative flex max-w-full border-b4 border-gray-500 dark:border-gray-500 items-center justify-center">
                 <div
                     title="Arraste para mover"
                     class="drag-handle flex items-center justify-center bg-primary text-primary-foreground shadow-md hover:bg-primary/90 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500 dark:shadow-gray-900/30"
@@ -296,8 +296,8 @@ onBeforeUnmount(() => {
 .center-button {
     position: absolute;
     top: 15%;
-    right: 0;
-    transform: translateY(-100%);
+    right: 20px;
+    transform: translateY(-100%); 
     width: 36px;
     height: 36px;
     z-index: 100;

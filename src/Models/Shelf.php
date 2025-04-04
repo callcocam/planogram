@@ -27,6 +27,7 @@ class Shelf extends Model
         'shelf_height',
         'shelf_depth',
         'shelf_position',
+        'spacing',
         'ordering',
         'settings',
         'status',

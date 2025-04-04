@@ -1,7 +1,7 @@
 <!-- Versão atualizada do Shelf.vue com ghost melhorado -->
 <template>
     <div
-        class="shelf relative flex items-end justify-around border border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
+        class="shelf relative flex items-end justify-around border-y border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
         :style="shelfStyle"
         :data-shelf-id="shelf.id"
         @drop.prevent="onDrop"
@@ -178,8 +178,8 @@ const shelfStyle = computed(() => {
     // Retornamos o estilo final
     return {
         position: 'absolute',
-        left: '0',
-        width: `${props.sectionWidth * props.scaleFactor}px`,
+        left: '-4px',
+        width: `${props.sectionWidth * props.scaleFactor+4}px`,
         height: `${props.shelf.shelf_height * props.scaleFactor}px`,
         top: `${topPosition}px`,
         zIndex: '1',
