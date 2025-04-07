@@ -1,6 +1,8 @@
 <template>
-    <div class="sticky top-0 flex h-screen w-72 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-        <div class="border-b border-gray-200 bg-white p-3 dark:bg-gray-800 dark:border-gray-700">
+    <div
+        class="sticky top-0 flex h-screen w-72 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+    >
+        <div class="border-b border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
             <h3 class="text-center text-lg font-medium text-gray-800 dark:text-gray-100">Produtos</h3>
 
             <!-- Campo de busca com design aprimorado -->
@@ -9,14 +11,14 @@
                     v-model="filters.search"
                     type="text"
                     placeholder="Buscar produtos..."
-                    class="w-full rounded-md border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
+                    class="w-full rounded-md border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 />
                 <Search class="absolute right-3 top-2 h-4 w-4 text-gray-400 dark:text-gray-300" />
             </div>
 
             <!-- Botão de filtros com design aprimorado -->
             <button
-                class="mt-2 flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                class="mt-2 flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 @click="showFilters = !showFilters"
             >
                 <div class="flex items-center">
@@ -27,10 +29,13 @@
             </button>
 
             <!-- Painel de filtros colapsável -->
-            <div v-if="showFilters" class="mt-2 rounded-md border border-gray-200 bg-white p-3 text-sm dark:bg-gray-700 dark:border-gray-600">
+            <div v-if="showFilters" class="mt-2 rounded-md border border-gray-200 bg-white p-3 text-sm dark:border-gray-600 dark:bg-gray-700">
                 <div class="mb-2">
                     <label class="mb-1 block text-gray-700 dark:text-gray-200">Categoria</label>
-                    <select class="w-full rounded-md border-gray-300 bg-white py-1 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" v-model="filters.category">
+                    <select
+                        class="w-full rounded-md border-gray-300 bg-white py-1 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        v-model="filters.category"
+                    >
                         <option value="">Todas as categorias</option>
                         <option v-for="(cat, i) in categories" :key="i" :value="cat.id">{{ cat.name }}</option>
                     </select>
@@ -40,18 +45,30 @@
                     <p class="mb-1 block text-gray-700 dark:text-gray-200">Atributos</p>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="flex items-center">
-                            <input type="checkbox" class="mr-1 rounded text-primary dark:bg-gray-700 dark:border-gray-600" v-model="filters.hangable" />
+                            <input
+                                type="checkbox"
+                                class="mr-1 rounded text-primary dark:border-gray-600 dark:bg-gray-700"
+                                v-model="filters.hangable"
+                            />
                             <span class="dark:text-gray-200">Pendurável</span>
                         </label>
                         <label class="flex items-center">
-                            <input type="checkbox" class="mr-1 rounded text-primary dark:bg-gray-700 dark:border-gray-600" v-model="filters.stackable" />
+                            <input
+                                type="checkbox"
+                                class="mr-1 rounded text-primary dark:border-gray-600 dark:bg-gray-700"
+                                v-model="filters.stackable"
+                            />
                             <span class="dark:text-gray-200">Empilhável</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="button" @click="clearFilters" class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+                    <button
+                        type="button"
+                        @click="clearFilters"
+                        class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                    >
                         Limpar filtros
                     </button>
                 </div>
@@ -74,7 +91,7 @@
                     @dragstart="handleDragStart($event, product)"
                 >
                     <div class="flex items-center space-x-3">
-                        <div class="flex-shrink-0 overflow-hidden rounded border bg-white p-1 dark:bg-gray-800 dark:border-gray-600">
+                        <div class="flex-shrink-0 overflow-hidden rounded border bg-white p-1 dark:border-gray-600 dark:bg-gray-800">
                             <img :src="product.image_url" :alt="product.name" class="h-12 w-12 object-contain" @error="handleImageError" />
                         </div>
                         <div class="min-w-0 flex-1">
@@ -83,7 +100,9 @@
                         </div>
                     </div>
                     <div class="mt-1 flex justify-end">
-                        <button class="invisible text-xs text-blue-600 group-hover:visible dark:text-blue-400" @click.stop="viewStats(product)">Ver estatísticas</button>
+                        <button class="invisible text-xs text-blue-600 group-hover:visible dark:text-blue-400" @click.stop="viewStats(product)">
+                            Ver estatísticas
+                        </button>
                     </div>
                 </li>
             </ul>
@@ -107,7 +126,6 @@
 import { ChevronDown, Loader, Package, Search, SlidersHorizontal } from 'lucide-vue-next';
 import { onMounted, ref, watch } from 'vue';
 import Category from '../gondola/Category.vue';
-import { any } from 'zod';
 
 interface Product {
     id: number;
@@ -123,18 +141,21 @@ interface Category {
 }
 
 const props = defineProps({
+    gondola: {
+        type: Object,
+        required: true,
+    },
     categories: {
         type: Array as () => Category[],
         default: [],
     },
 });
- 
 
 const emit = defineEmits(['select-product', 'drag-start', 'view-stats']);
 
 // Estado
 const showFilters = ref(false);
-const loading = ref(false); 
+const loading = ref(false);
 const filters = ref({
     search: '',
     category: null,
@@ -143,6 +164,8 @@ const filters = ref({
     flammable: false,
     perishable: false,
 });
+// Vamos pegar todos os produtos que estão na gondola
+const notInGondola = ref([] as string[]);
 
 // Observa os filtros para refazer a busca
 watch(
@@ -161,9 +184,9 @@ function handleProductSelect(product) {
     emit('select-product', product);
 }
 
-function handleDragStart(event, product) { 
+function handleDragStart(event, product) {
     event.dataTransfer.setData('text/product', JSON.stringify(product));
-    event.dataTransfer.effectAllowed = 'copy'; 
+    event.dataTransfer.effectAllowed = 'copy';
     emit('drag-start', event, product);
 }
 
@@ -181,10 +204,18 @@ async function fetchProducts() {
     try {
         loading.value = true;
 
+        props.gondola.sections.forEach((section) => {
+            section.shelves.forEach((shelf) => {
+                shelf.segments.forEach((segment) => {
+                    notInGondola.value.push(segment.layer.product.id);
+                });
+            });
+        });
         // Se houver implementação real da API
         // @ts-ignore
         const response = await window.axios.get(route('api.products.index'), {
             params: {
+                notInGondola: notInGondola.value,
                 search: filters.value.search,
                 category: filters.value.category,
                 hangable: filters.value.hangable,
@@ -201,7 +232,6 @@ async function fetchProducts() {
         loading.value = false;
     }
 }
- 
 
 /**
  * Limpa todos os filtros
@@ -219,7 +249,7 @@ function clearFilters() {
 }
 // Inicializa o componente
 onMounted(async () => {
-    // Carrega categorias e produtos ao montar o componente 
+    // Carrega categorias e produtos ao montar o componente
     await fetchProducts();
 });
 </script>
@@ -259,16 +289,16 @@ onMounted(async () => {
     .overflow-y-auto {
         scrollbar-color: #4b5563 #1f2937;
     }
-    
+
     .overflow-x-auto {
         scrollbar-color: #4b5563 #1f2937;
     }
-    
+
     .overflow-y-auto::-webkit-scrollbar-track,
     .overflow-x-auto::-webkit-scrollbar-track {
         background: #1f2937;
     }
-    
+
     .overflow-y-auto::-webkit-scrollbar-thumb,
     .overflow-x-auto::-webkit-scrollbar-thumb {
         background-color: #4b5563;

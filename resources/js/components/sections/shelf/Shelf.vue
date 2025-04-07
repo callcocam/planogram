@@ -1,10 +1,10 @@
-<!-- Versão atualizada do Shelf.vue com ghost melhorado -->
+<!-- Versão TypeScript do Shelf.vue com tipagem completa -->
 <template>
     <div
         class="shelf relative flex items-end justify-around border-y border-gray-400 bg-gray-700 text-gray-50 dark:bg-gray-800"
         :style="shelfStyle"
-        :data-shelf-id="shelf.id"
         @drop.prevent="onDrop"
+        @click="shelfClick"
         ref="shelfRef"
     >
         <!-- Implementação do draggable para os segmentos -->
@@ -32,7 +32,10 @@
 
         <!-- Area de soltar produto -->
         <div
-            class="absolute inset-0 bottom-0 z-0 rounded-md bg-gray-200/25"
+            class="select-shelf absolute inset-0 bottom-0 z-0"
+            :class="{
+                'border-2 border-dashed border-blue-500': shelfSelected,
+            }"
             :style="dragStyle"
             draggable="true"
             @dragstart="onDragstart"
@@ -56,7 +59,7 @@
                         class="segment-ghost"
                         :style="{
                             width: `${segment.width * scaleFactor}px`,
-                            height: `${segment.layer?.height * scaleFactor || 40}px`,
+                            height: `${segment.layer && segment.layer.height ? segment.layer.height * scaleFactor : 40}px`,
                             backgroundColor: getRandomColor(segment.id),
                         }"
                     ></div>
@@ -66,14 +69,94 @@
     </div>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from 'vue';
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import draggable from 'vuedraggable';
 import Segment from './segment/Segment.vue';
 
+/**
+ * Interfaces para tipagem do componente
+ */
+
+// Interface para o produto
+interface Product {
+    id: string | number;
+    name: string;
+    image: string;
+    height: number;
+    [key: string]: any; // Para propriedades adicionais do produto
+}
+
+// Interface para a camada que representa o produto no segmento
+interface Layer {
+    product_id?: string | number;
+    product_name?: string;
+    product_image?: string;
+    product?: Product;
+    height: number;
+    spacing: number;
+    quantity: number;
+    status: string;
+    [key: string]: any; // Para propriedades adicionais da camada
+}
+
+// Interface para um segmento individual
+interface Segment {
+    id: string;
+    width: number;
+    ordering: number;
+    quantity: number;
+    spacing: number;
+    position: number;
+    preserveState: boolean;
+    status: string;
+    layer?: Layer;
+    [key: string]: any; // Para propriedades adicionais do segmento
+}
+
+// Interface para uma prateleira
+interface Shelf {
+    id: string | number;
+    shelf_height: number;
+    shelf_position: number;
+    segments: Segment[];
+    [key: string]: any; // Para propriedades adicionais da prateleira
+}
+
+// Interface para a categoria
+interface Category {
+    id: string | number;
+    name: string;
+    [key: string]: any; // Para propriedades adicionais da categoria
+}
+
+// Interface para posição de furos
+interface Hole {
+    position: number;
+    [key: string]: any; // Para propriedades adicionais dos furos
+}
+
+// Interface para eventos de draggable
+interface DraggableEvent {
+    moved?: {
+        oldIndex: number;
+        newIndex: number;
+        element: Segment;
+    };
+    added?: {
+        newIndex: number;
+        element: Segment;
+    };
+    removed?: {
+        oldIndex: number;
+        element: Segment;
+    };
+}
+
+// Props do componente
 const props = defineProps({
     shelf: {
-        type: Object,
+        type: Object as () => Shelf,
         required: true,
     },
     scaleFactor: {
@@ -101,24 +184,144 @@ const props = defineProps({
         default: 0,
     },
     selectedCategory: {
-        type: [Object, null],
+        type: Object as () => Category | null,
         default: null,
     },
     holes: {
-        type: Array,
+        type: Array as () => Hole[],
         default: () => [],
     },
 });
 
-const emit = defineEmits(['click', 'drop:product', 'segment-select', 'update:segments', 'update:quantity']);
+// Define os eventos emitidos pelo componente
+const emit = defineEmits<{
+    (e: 'click', shelf: Shelf): void;
+    (e: 'drop:product', data: { shelf: Shelf; segment: Segment }): void;
+    (e: 'segment-select', segmentId: string): void;
+    (e: 'update:segments', data: { shelfId: string | number; segments: Segment[] }): void;
+    (e: 'update:quantity', data: { segmentId: string; quantity: number }): void;
+}>();
 
-const draggingProduct = ref(false);
-const shelfRef = ref(null);
-const ghostTemplate = ref(null);
-const ghost = ref(null);
+// Referências reativas
+const draggingProduct = ref<boolean>(false);
+const shelfRef = ref<HTMLElement | null>(null);
+const ghostTemplate = ref<HTMLElement | null>(null);
+const ghost = ref<HTMLElement | null>(null);
+const shelfSelected = ref<Shelf | null>(null);
+// Constante para o evento de seleção de prateleira
+const SHELF_SELECTED_EVENT = 'shelf-selected';
 
-// Função para gerar cores aleatórias consistentes baseadas no ID
-function getRandomColor(id) {
+/**
+ * Função chamada quando a prateleira é clicada
+ * @param event - Evento de clique
+ */
+const shelfClick = (event: MouseEvent): void => {
+    // Prevent event propagation to parent elements
+    event.stopPropagation();
+
+    // Check if in multi-select mode (Ctrl/Cmd pressed)
+    const isMultiSelect = event.ctrlKey || event.metaKey;
+
+    shelfSelected.value = props.shelf; // Atualiza a prateleira selecionada
+    // Emite o evento de clique na prateleira
+    const shelfClickEvent = new CustomEvent(SHELF_SELECTED_EVENT, {
+        detail: {
+            selectedId: props.shelf.id,
+            isMultiSelect,
+        },
+    });
+    window.dispatchEvent(shelfClickEvent); // Dispara o evento de seleção
+};
+
+/**
+ * Função para lidar com cliques no documento
+ * Desmarca a prateleira selecionada quando clica fora dela
+ * @param event - Evento de clique
+ */
+const handleDocumentClick = (event: MouseEvent): void => {
+    // Se o clique não foi dentro desta prateleira, desmarca-a
+    if (shelfRef.value && !shelfRef.value.contains(event.target as Node)) {
+        if (shelfSelected.value && shelfSelected.value.id === props.shelf.id) {
+            shelfSelected.value = null;
+        }
+        draggingProduct.value = false; // Restaura o estado de arraste
+    }
+};
+
+/**
+ * Gerencia a seleção de prateleiras
+ * @param selectedId - ID do segmento selecionado
+ * @param isMultiSelect - Indica se está em modo de seleção múltipla
+ */
+const handleShelfSelection = (selectedId: string, isMultiSelect: boolean): void => {
+    // Implemente a lógica de seleção conforme necessário
+    // Esta função está apenas definida para manter a estrutura do código original
+
+    if (isMultiSelect) {
+        // Adiciona a prateleira à seleção
+        console.log('Adicionando à seleção múltipla');
+    } else {
+        // Seleciona apenas esta prateleira
+        if (shelfSelected.value && shelfSelected.value.id !== selectedId) {
+            shelfSelected.value = null; // Desseleciona se já estiver selecionada
+        }
+    }
+};
+
+/**
+ * Manipulador para o evento personalizado de seleção
+ * @param e - Evento recebido
+ */
+const shelfSelectionHandler = (e: Event): void => {
+    const customEvent = e as CustomEvent;
+    handleShelfSelection(customEvent.detail.selectedId, customEvent.detail.isMultiSelect);
+};
+
+/**
+ * Handle keyboard events for quantity adjustment
+ * @param {KeyboardEvent} event - Keyboard event
+ */
+const handleKeyDown = (event: KeyboardEvent) => {
+    // Only handle keyboard events when this shelf is selected
+    if (shelfSelected.value && shelfSelected.value.id === props.shelf.id) {
+        console.log('This shelf is selected, processing arrow key');
+
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            const previousHole = props.holes.find((hole: Hole) => hole.position < props.shelf.shelf_position);
+            console.log('Previous hole:', previousHole, props.shelf.shelf_position);
+            if (previousHole) {
+                // Move the shelf to the previous hole
+                props.shelf.shelf_position = previousHole.position;
+                // emit('update:segments', {
+                //     shelfId: props.shelf.id,
+                //     segments: sortableSegments.value,
+                // });
+            }
+        } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            const nextHole = props.holes.find((hole: Hole) => hole.position > props.shelf.shelf_position);
+            console.log('Next hole:', nextHole, props.shelf.shelf_position);
+            if (nextHole) {
+                // Move the shelf to the next hole
+                props.shelf.shelf_position = nextHole.position;
+                // emit('update:segments', {
+                //     shelfId: props.shelf.id,
+                //     segments: sortableSegments.value,
+                // });
+            }
+        }
+    } else {
+    }
+};
+
+/**
+ * Função para gerar cores aleatórias consistentes baseadas no ID
+ * Isso garante que o mesmo ID sempre produza a mesma cor
+ * @param id - ID do segmento ou elemento
+ * @returns String de cor no formato HSL
+ */
+function getRandomColor(id: string | number): string {
     // Converte o ID em um número para usar como seed
     let seed = 0;
     if (typeof id === 'string') {
@@ -134,21 +337,28 @@ function getRandomColor(id) {
     return `hsl(${hue}, 70%, 60%)`;
 }
 
-// Garantir que todos os segmentos tenham IDs
-const ensureSegmentIds = (segments) => {
+/**
+ * Garante que todos os segmentos tenham IDs únicos
+ * @param segments - Array de segmentos a serem verificados
+ * @returns Array de segmentos com IDs garantidos
+ */
+const ensureSegmentIds = (segments: Segment[]): Segment[] => {
     return segments.map((segment, index) => ({
         ...segment,
         id: segment.id || `segment-${Date.now()}-${index}`,
     }));
 };
 
-// Referência local aos segmentos para o draggable
-const sortableSegments = computed({
+/**
+ * Referência local aos segmentos para o draggable
+ * Aplica ordenamento e garante IDs para todos os segmentos
+ */
+const sortableSegments = computed<Segment[]>({
     get() {
         // Garantir que todos os segmentos tenham IDs
         return ensureSegmentIds(props.shelf.segments || []);
     },
-    set(newSegments) {
+    set(newSegments: Segment[]) {
         // Garantir que a ordenação está atualizada antes de emitir o evento
         const reorderedSegments = newSegments.map((segment, index) => ({
             ...segment,
@@ -163,29 +373,39 @@ const sortableSegments = computed({
     },
 });
 
-// Computed property para estilo do container de segmentos
+/**
+ * Computed property para estilo do container de segmentos
+ * Define a altura baseada na altura da prateleira
+ */
 const segmentsContainerStyle = computed(() => {
     return {
         height: `${props.shelf.shelf_height * props.scaleFactor}px`,
     };
 });
 
-// Computed property para calcular o estilo da prateleira, incluindo posicionamento
+/**
+ * Computed property para calcular o estilo da prateleira
+ * Inclui posicionamento, dimensões e z-index
+ */
 const shelfStyle = computed(() => {
     // Convertemos a posição da prateleira para pixels usando o fator de escala
     const topPosition = props.shelf.shelf_position * props.scaleFactor;
 
-    // Retornamos o estilo final
+    // Retornamos o estilo final com tipagem correta (as CSSProperties)
     return {
-        position: 'absolute',
+        position: 'absolute' as const, // Use 'as const' para tipar corretamente
         left: '-4px',
-        width: `${props.sectionWidth * props.scaleFactor+4}px`,
+        width: `${props.sectionWidth * props.scaleFactor + 4}px`,
         height: `${props.shelf.shelf_height * props.scaleFactor}px`,
         top: `${topPosition}px`,
         zIndex: '1',
     };
 });
 
+/**
+ * Computed property para o estilo da área de arrasto
+ * Muda aparência quando um produto está sendo arrastado
+ */
 const dragStyle = computed(() => {
     if (draggingProduct.value) {
         return {
@@ -207,16 +427,21 @@ const dragStyle = computed(() => {
     };
 });
 
-// Tratar eventos de arrasto do segmento
-const handleSegmentDrag = (eventData) => {
-    // Você pode usar isso para rastreamento ou lógica adicional
-    console.log(`Segmento ${eventData.segment.id} ${eventData.action}`);
+/**
+ * Tratar eventos de arrasto do segmento
+ * @param eventData - Dados do evento de arrasto
+ */
+const handleSegmentDrag = (eventData: any): void => {
+    // Pode ser usado para rastreamento ou lógica adicional
+    // Implementação futura se necessário
 };
 
-// Função para lidar com alterações no arrasto de segmentos
-const onSegmentDragChange = (event) => {
-    console.log('Evento de drag change:', event);
-
+/**
+ * Função para lidar com alterações no arrasto de segmentos
+ * Atualiza a ordenação dos segmentos quando são arrastados
+ * @param event - Evento de alteração do draggable
+ */
+const onSegmentDragChange = (event: DraggableEvent): void => {
     // Verificar se houve alguma alteração (moved, added ou removed)
     const hasChanged = event.moved || event.added || event.removed;
 
@@ -248,13 +473,17 @@ const onSegmentDragChange = (event) => {
     });
 };
 
-// Função chamada quando o produto é solto na prateleira
-const onDrop = (event) => {
+/**
+ * Função chamada quando um elemento é solto na prateleira
+ * Processa tanto produtos quanto segmentos
+ * @param event - Evento de drop do DOM
+ */
+const onDrop = (event: DragEvent): void => {
     draggingProduct.value = false; // Restaura o estado de arraste
 
     // Verificar se temos um produto ou um segmento sendo solto
-    const productData = event.dataTransfer.getData('text/product');
-    const segmentData = event.dataTransfer.getData('text/segment');
+    const productData = event.dataTransfer?.getData('text/product');
+    const segmentData = event.dataTransfer?.getData('text/segment');
 
     if (productData) {
         handleProductDrop(productData);
@@ -263,21 +492,26 @@ const onDrop = (event) => {
     }
 };
 
-// Função para lidar com a soltura de um produto
-const handleProductDrop = (productData) => {
+/**
+ * Processa a soltura de um produto na prateleira
+ * Cria um novo segmento com o produto
+ * @param productData - Dados do produto em formato JSON
+ */
+const handleProductDrop = (productData: string): void => {
     try {
-        const product = JSON.parse(productData);
+        const product = JSON.parse(productData) as Product;
         // Verifica se o produto é válido
         if (product && product.id) {
-            const newSegment = {
-                width: parseInt(props.sectionWidth),
+            const newSegment: Segment = {
+                id: `segment-${Date.now()}-${sortableSegments.value.length}`,
+                width: parseInt(props.sectionWidth.toString()),
                 ordering: (sortableSegments.value.length || 0) + 1,
                 quantity: 1,
                 spacing: 0,
                 position: 0,
                 preserveState: false,
                 status: 'published',
-                // Create layer with product information
+                // Cria layer com informações do produto
                 layer: {
                     product_id: product.id,
                     product_name: product.name,
@@ -292,7 +526,7 @@ const handleProductDrop = (productData) => {
 
             // Emite o evento com os segmentos atualizados
             emit('drop:product', {
-                ...props.shelf,
+                shelf: props.shelf,
                 segment: newSegment,
             });
         }
@@ -301,10 +535,14 @@ const handleProductDrop = (productData) => {
     }
 };
 
-// Função para lidar com a soltura de um segmento
-const handleSegmentDrop = (segmentData) => {
+/**
+ * Processa a soltura de um segmento na prateleira
+ * Atualiza um segmento existente ou cria um novo
+ * @param segmentData - Dados do segmento em formato JSON
+ */
+const handleSegmentDrop = (segmentData: string): void => {
     try {
-        const segment = JSON.parse(segmentData);
+        const segment = JSON.parse(segmentData) as Segment;
         // Verificar se o segmento já existe nesta prateleira
         const existingIndex = sortableSegments.value.findIndex((s) => s.id === segment.id);
 
@@ -327,21 +565,22 @@ const handleSegmentDrop = (segmentData) => {
                 segments: reorderedSegments,
             });
         } else {
-            const newSegment = {
+            // Cria um novo segmento
+            const newSegment: Segment = {
                 id: segment.id,
-                width: parseInt(segment.width),
+                width: parseInt(segment.width.toString()),
                 ordering: (sortableSegments.value.length || 0) + 1, // Garante que fique no final
                 quantity: segment.quantity,
                 spacing: segment.spacing,
                 position: segment.position,
                 preserveState: false,
                 status: 'published',
-                // Create layer with product information
+                // Cria layer com informações do produto
                 layer: segment.layer,
             };
 
             emit('drop:product', {
-                ...props.shelf,
+                shelf: props.shelf,
                 segment: newSegment,
             });
         }
@@ -350,25 +589,36 @@ const handleSegmentDrop = (segmentData) => {
     }
 };
 
-// Função chamada quando o mouse entra na área de soltar
-const onDragEnter = (event) => {
-    if (event.dataTransfer.types.includes('text/product') || event.dataTransfer.types.includes('text/segment')) {
+/**
+ * Função chamada quando o mouse entra na área de soltar
+ * Ativa o modo de arraste para visualização
+ * @param event - Evento de dragenter do DOM
+ */
+const onDragEnter = (event: DragEvent): void => {
+    if (event.dataTransfer?.types.includes('text/product') || event.dataTransfer?.types.includes('text/segment')) {
         draggingProduct.value = true; // Define o estado de arraste
         event.preventDefault(); // Previne o comportamento padrão
-        event.target.style.borderColor = 'rgba(59, 130, 246, 0.5)'; // Altera a cor da borda
+        (event.target as HTMLElement).style.borderColor = 'rgba(59, 130, 246, 0.5)'; // Altera a cor da borda
     }
 };
 
-// Função chamada quando o mouse sai da área de soltar
-const onDragLeave = (event) => {
-    if (!shelfRef.value.contains(event.relatedTarget)) {
+/**
+ * Função chamada quando o mouse sai da área de soltar
+ * Desativa o modo de arraste
+ * @param event - Evento de dragleave do DOM
+ */
+const onDragLeave = (event: DragEvent): void => {
+    if (shelfRef.value && !shelfRef.value.contains(event.relatedTarget as Node)) {
         draggingProduct.value = false; // Restaura o estado de arraste
-        event.target.style.borderColor = 'transparent'; // Restaura a cor da borda
+        (event.target as HTMLElement).style.borderColor = 'transparent'; // Restaura a cor da borda
     }
 };
 
-// Criar ghost baseado no estado atual da prateleira
-const createShelfGhost = () => {
+/**
+ * Cria um elemento visual que representa a prateleira durante o arrasto
+ * @returns - Elemento DOM do ghost criado
+ */
+const createShelfGhost = (): HTMLElement => {
     // Verifica se já existe um ghost e remove
     if (ghost.value) {
         document.body.removeChild(ghost.value);
@@ -423,11 +673,15 @@ const createShelfGhost = () => {
     return ghostEl;
 };
 
-// Função chamada quando o drag começa
-const onDragstart = (event) => {
-    event.target.style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
-    event.target.style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
-    event.dataTransfer.setData('text/shelf', JSON.stringify(props.shelf));
+/**
+ * Função chamada quando o arrasto começa
+ * Configura a aparência e os dados para o arrasto
+ * @param event - Evento de dragstart do DOM
+ */
+const onDragstart = (event: DragEvent): void => {
+    (event.target as HTMLElement).style.opacity = '0.2'; // Diminui a opacidade da prateleira arrastada
+    (event.target as HTMLElement).style.zIndex = '10'; // Aumenta o z-index da prateleira arrastada
+    event.dataTransfer?.setData('text/shelf', JSON.stringify(props.shelf));
 
     // Cria um ghost mais avançado que se parece com a prateleira
     const newGhost = createShelfGhost();
@@ -437,17 +691,19 @@ const onDragstart = (event) => {
     const offsetY = 20; // Um pouco acima do cursor
 
     // Define o ghost como imagem de arraste
-    event.dataTransfer.setDragImage(newGhost, offsetX, offsetY);
-
-    console.log('Iniciando arraste da prateleira:', ghost.value);
+    event.dataTransfer?.setDragImage(newGhost, offsetX, offsetY);
 };
 
-// Função chamada quando o drag termina
-const onDragend = (event) => {
+/**
+ * Função chamada quando o arrasto termina
+ * Limpa os elementos visuais e dados do arrasto
+ * @param event - Evento de dragend do DOM
+ */
+const onDragend = (event: DragEvent): void => {
     draggingProduct.value = false; // Restaura o estado de arraste
-    event.dataTransfer.clearData();
-    event.target.style.opacity = '1'; // Restaura a opacidade da prateleira
-    event.target.style.zIndex = '1'; // Restaura o z-index da prateleira
+    event.dataTransfer?.clearData();
+    (event.target as HTMLElement).style.opacity = '1'; // Restaura a opacidade da prateleira
+    (event.target as HTMLElement).style.zIndex = '1'; // Restaura o z-index da prateleira
 
     // Limpa o ghost após um pequeno delay (para evitar flicker)
     setTimeout(() => {
@@ -457,9 +713,8 @@ const onDragend = (event) => {
         }
     }, 50);
 
-    const shelf = props.shelf;
     // Pegar a posição da prateleira
-    const position = event.target.getBoundingClientRect();
+    const position = (event.target as HTMLElement).getBoundingClientRect();
     const shelfPosition = {
         left: position.left,
         top: position.top,
@@ -467,14 +722,27 @@ const onDragend = (event) => {
         height: position.height,
     };
 
-    // Atualiza a posição da prateleira se necessário
+    // Aqui você pode adicionar lógica para atualizar a posição da prateleira se necessário
     // shelf.shelf_position = shelfPosition.top;
 };
 
-// Limpar recursos quando o componente é desmontado
+// Lifecycle Hooks
 onMounted(() => {
-    // Se quiser usar a versão html2canvas para o ghost,
-    // pode adicionar código aqui para pré-renderizar a prateleira
+    // Registra os event listeners
+    window.addEventListener(SHELF_SELECTED_EVENT, shelfSelectionHandler);
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', handleDocumentClick);
+});
+
+onUnmounted(() => {
+    // Limpa os event listeners
+    window.removeEventListener(SHELF_SELECTED_EVENT, shelfSelectionHandler);
+    window.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('click', handleDocumentClick);
+    // Limpa recursos como ghost, se existirem
+    if (ghost.value && document.body.contains(ghost.value)) {
+        document.body.removeChild(ghost.value);
+    }
 });
 </script>
 

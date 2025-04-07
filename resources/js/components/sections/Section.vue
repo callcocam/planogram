@@ -17,6 +17,7 @@
             :numberOfShelves="sortableShelves.length"
             :currentIndex="index"
             :selected-category="selectedCategory"
+            :holes="holes"
             @drop:product="onDropProduct"
             @click="$emit('select-shelf', shelf)"
             @segment-select="$emit('segment-select', $event)"
@@ -31,33 +32,51 @@
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import Shelf from './shelf/Shelf.vue';
-// @ts-ignore
+
+// Define the Category interface to match what Shelf component expects
+interface Category {
+    id: string | number;
+    name: string;
+}
 
 const props = defineProps({
     section: {
         type: Object,
         required: true,
     },
-    scaleFactor: {
-        type: Number,
-        required: true,
-    },
     selectedCategory: {
-        type: [Object, null],
+        type: Object as () => Category | null,
         default: null,
     },
     showGrid: {
         type: Boolean,
         default: true,
     },
+    scaleFactor: {
+        type: Number,
+        default: 1,
+    },
 });
 
-const emit = defineEmits(['select-shelf', 'add-shelf', 'update-shelves', 'move-shelf-to-section', 'segment-select', 'update:quantity', 'update:segments']);
+const emit = defineEmits([
+    'select-shelf',
+    'add-shelf',
+    'update-shelves',
+    'move-shelf-to-section',
+    'segment-select',
+    'update:quantity',
+    'update:segments',
+]);
 
 // Criar ref para prateleiras que podemos modificar com draggable
 const sortableShelves = ref<any[]>([]);
 
 const draggingSection = ref(false);
+ 
+
+const holes = computed(() => {
+    return props.section.settings.holes || [];
+});
 
 // Inicializar e atualizar sortableShelves quando props.section.shelves mudar
 watch(
@@ -77,12 +96,11 @@ const sectionStyle = computed(() => {
         width: `${props.section.width * props.scaleFactor}px`,
         height: `${props.section.height * props.scaleFactor}px`,
         position: 'relative' as const,
-        overflow: 'hidden',
         borderWidth: '2px',
         borderStyle: draggingSection.value ? 'dashed' : 'solid',
         borderColor: draggingSection.value ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
         backgroundColor: draggingSection.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-        overflow: 'visible'
+        overflow: 'visible' as const,
     };
 });
 
@@ -140,8 +158,8 @@ const onDrop = (event: DragEvent) => {
 const onDragEnter = (event: DragEvent) => {
     // Previne o comportamento padrão para permitir o drop
     event.preventDefault();
-   if(event.dataTransfer?.types.includes('text/segment')) {
-       return;
+    if (event.dataTransfer?.types.includes('text/segment')) {
+        return;
     }
     // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;
@@ -167,8 +185,8 @@ const onDragOver = (event: DragEvent) => {
     // Verifica se dataTransfer está disponível
     if (!event.dataTransfer) return;
 
-    if(event.dataTransfer?.types.includes('text/segment')) {
-       return;
+    if (event.dataTransfer?.types.includes('text/segment')) {
+        return;
     }
     // Obtém o elemento alvo (a seção)
     const target = event.currentTarget as HTMLElement;

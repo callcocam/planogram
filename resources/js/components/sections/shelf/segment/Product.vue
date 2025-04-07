@@ -24,11 +24,15 @@ const props = defineProps({
         type: Number,
         required: true,
     },
+    productSpacing: {
+        type: Number,
+        default: 0,
+    },
 });
 const emit = defineEmits(['click', 'drop-product']);
   
 const productRef = ref(null) as any;
-const productStyle = computed(() => { 
+const productStyle = computed(() => {  
     return {
         width: `${props.product.width * props.scaleFactor}px`,
         height: `${props.product.height * props.scaleFactor}px`,
@@ -37,6 +41,7 @@ const productStyle = computed(() => {
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center', 
+        margin: `0 ${props.productSpacing * props.scaleFactor}px`,
     };
 }); 
 </script>

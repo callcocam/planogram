@@ -79,17 +79,27 @@ class LayerController extends Controller
      */
     public function update(UpdateLayerRequest $request, Layer $layer)
     {
-        $data = $request->all();
+        $data = $request->validated();
         DB::beginTransaction();
         try {
             if ($request->has('increaseQuantity')) {
                 $layer->update([
-                    'quantity' => data_get($data, 'quantity'),
+                    'quantity' => data_get($data, 'quantity')
                 ]);
             } elseif ($request->has('decreaseQuantity')) {
                 if ($layer->quantity > 1) {
                     $layer->update([
-                        'quantity' => data_get($data, 'quantity'),
+                        'quantity' => data_get($data, 'quantity')
+                    ]);
+                }
+            } elseif ($request->has('increaseSpacing')) {
+                $layer->update([
+                    'spacing' => data_get($data, 'spacing')
+                ]);
+            } elseif ($request->has('decreaseSpacing')) {
+                if ($layer->spacing > 0) {
+                    $layer->update([
+                        'spacing' => data_get($data, 'spacing')
                     ]);
                 }
             } else {
@@ -99,6 +109,7 @@ class LayerController extends Controller
             DB::commit();
             return response()->json([
                 'record' => $layer,
+                'data' => $data,
                 'title' => 'Camada de produto atualizada com sucesso',
                 'description' => 'Camada de produto atualizada com sucesso',
                 'variant' => 'default',

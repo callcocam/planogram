@@ -29,6 +29,13 @@ class UpdateLayerRequest extends FormRequest
                 'min:1',
                 new ShelfWidthSpaceValidation($this->route('layer')->id, $this->request->all()),
             ], 
+            'spacing' => [
+                'sometimes',
+                'required',
+                'integer',
+                'min:0',
+                new ShelfWidthSpaceValidation($this->route('layer')->id, $this->request->all()),
+            ],
         ];
     }
 

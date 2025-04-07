@@ -1,11 +1,15 @@
 <template>
-    <div class="flex flex-col bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700 md:flex-row">
+    <div class="flex flex-col bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 md:flex-row">
         <draggable v-model="sortableSections" item-key="id" handle=".drag-handle" @end="onDragEnd" class="mt-28 flex px-10 md:flex-row">
             <template #item="{ element: section, index }">
                 <div class="flex items-center">
                     <Gramalheira :section="section" :scale-factor="props.scaleFactor" @delete-section="deleteSection">
                         <template #actions>
-                            <Button size="sm" class="drag-handle h-6 w-6 cursor-move p-0 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" variant="secondary">
+                            <Button
+                                size="sm"
+                                class="drag-handle h-6 w-6 cursor-move p-0 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                variant="secondary"
+                            >
                                 <MoveIcon class="h-3 w-3" />
                             </Button>
                         </template>
@@ -38,6 +42,10 @@ import { Button } from '@/components/ui/button';
 // @ts-ignore
 import { round } from 'lodash';
 import draggable from 'vuedraggable';
+interface Category {
+    id: string | number;
+    name: string;
+}
 
 const props = defineProps({
     gondola: {
@@ -49,7 +57,7 @@ const props = defineProps({
         required: true,
     },
     selectedCategory: {
-        type: [Object, null],
+        type: Object as () => Category | null,
         default: null,
     },
 });
@@ -145,7 +153,7 @@ const updateSegmentQuantity = (segment: any) => {
             preserveState: false,
             preserveScroll: true,
             onSuccess: () => {
-                // Handle success if  
+                // Handle success if
             },
             onError: () => {
                 // Handle error if needed

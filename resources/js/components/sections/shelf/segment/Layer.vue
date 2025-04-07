@@ -8,6 +8,7 @@
             :product="layer.product"
             :scale-factor="scaleFactor"
             :layer="layer"
+            :product-spacing="layerSpacing"
         />
     </div>
 </template>
@@ -45,9 +46,15 @@ const segmentSelected = ref(false);
 // Referência para o timer de debounce
 const debounceTimer = ref<any>(null);
 
-const layerQuantity = ref(props.layer.quantity);
+const layerQuantity = ref(props.layer.quantity || 1);
+
+const layerSpacing = ref(props.layer.spacing);
+
+const originalQuantity = ref(props.layer.quantity);
 
 const { toast } = useToast();
+
+const emit = defineEmits(['update:quantity']);
 
 watch(
     () => props.selected,
@@ -85,92 +92,133 @@ const debounce = (fn, delay = 300) => {
 
 /**
  * Manipula a alteração de quantidade de um segmento
- * @param {string} action - 'increase' ou 'decrease'
+ * @param object params - Dados a serem enviados para o servidor
+ * @param {number} newQuantity - Nova quantidade
+ * @returns {number} - Nova quantidade
  */
-const updateLayerQuantity = (action: 'increase' | 'decrease') => {
+const updateLayerQuantity = async (params, currentQuantity) => {
     if (!segmentSelected.value) return;
 
-    // Para decremento, verificar se a quantidade é maior que 1
-    if (action === 'decrease' && layerQuantity.value <= 1) return;
-
-    // Calculando a nova quantidade
-    const newQuantity = action === 'increase' ? layerQuantity.value + 1 : layerQuantity.value - 1;
-
+    // const currentQuantity = action.includes('increase') ? newQuantity + 1 : newQuantity - 1;
     // Atualiza o UI imediatamente
-    const originalQuantity = layerQuantity.value;
-
-    // Pré-atualiza o valor na interface para feedback imediato
-    if (action === 'increase') {
-        layerQuantity.value++;
-    } else {
-        layerQuantity.value--;
-    }
+    originalQuantity.value = currentQuantity; 
 
     // Debounce na emissão do evento para o componente pai
-    debounce(() => {
+    try {
         // @ts-ignore
-        window.axios
-            // @ts-ignore
-            .put(route('planogram.api.layers.update', props.layer.id), {
-                [action === 'increase' ? 'increaseQuantity' : 'decreaseQuantity']: true,
-                quantity: newQuantity,
-            })
-            .then((response) => {
-                const { description, title, variant } = response.data;
-                toast({
-                    title,
-                    description,
-                    variant,
-                });
-            })
-            .catch((error) => {
-                // Restaura o valor original em caso de erro
-                layerQuantity.value = originalQuantity;
-
-                toast({
-                    title: 'Erro ao atualizar a quantidade do segmento',
-                    description: error.response?.data?.message || 'Erro desconhecido',
-                    variant: 'destructive',
-                });
+        const response = await window.axios.put(route('planogram.api.layers.update', props.layer.id), params);
+        const { data } = response;
+        // Atualiza a quantidade no UI
+        if (data) {
+            const { description, title, variant } = data;
+            //     // Atualiza a quantidade no UI
+          
+            toast({
+                title,
+                description,
+                variant,
             });
-    });
+        }
+    } catch (error) {
+        toast({
+            title: 'Erro ao atualizar a quantidade do segmento',
+            description: error.response?.data?.message || 'Erro desconhecido',
+            variant: 'destructive',
+        });
+        originalQuantity.value = currentQuantity - 1; // Restaura o valor original em caso de erro 
+        // Restaura o valor original em caso de erro
+    }
 };
 
 /**
  * Aumenta a quantidade de layers em um segmento
  */
-const onIncreaseQuantity = () => updateLayerQuantity('increase');
+const onIncreaseQuantity = async () => {
+    const data = {
+        increaseQuantity: true,
+        quantity: layerQuantity.value + 1,
+    };
+    await updateLayerQuantity(data, layerQuantity.value + 1);
+    // Atualiza a quantidade no UI
+    layerQuantity.value = originalQuantity.value;
+    emit('update:quantity', layerQuantity.value);
+};
 
 /**
  * Diminui a quantidade de layers em um segmento
  */
-const onDecreaseQuantity = () => updateLayerQuantity('decrease');
+const onDecreaseQuantity = async () => {
+    const data = {
+        decreaseQuantity: true,
+        quantity: layerQuantity.value - 1,
+    };
+
+    // Para decremento, verificar se a quantidade é maior que 1
+    if (data.quantity <= 0) return;
+    await updateLayerQuantity(data, layerQuantity.value - 1);
+    // Atualiza a quantidade no UI
+    layerQuantity.value = originalQuantity.value;
+    emit('update:quantity', layerQuantity.value);
+};
+
+/**
+ * Add um spacing entre os produtos
+ * @param {number} index - Índice do produto
+ * @returns {string} - Estilo de espaçamento
+ */
+const onSpacingIncrease = async () => {
+    const data = {
+        increaseSpacing: true,
+        spacing: layerSpacing.value + 1,
+    };
+    await updateLayerQuantity(data, layerSpacing.value + 1);
+    // Atualiza o espaçamento no UI
+    layerSpacing.value = originalQuantity.value;
+};
+
+/**
+ * Remove o spacing entre os produtos
+ * @param {number} index - Índice do produto
+ * @returns {string} - Estilo de espaçamento
+ */
+const onSpacingDecrease = async () => {
+    const data = {
+        decreaseSpacing: true,
+        spacing: layerSpacing.value - 1,
+    }; 
+    // Para decremento, verificar se a quantidade é maior que 1
+    if (data.spacing < 0) return;
+    await updateLayerQuantity(data, layerSpacing.value - 1);
+    // Atualiza o espaçamento no UI
+    layerSpacing.value = originalQuantity.value;
+};
+
 // ----------------------------------------------------
 // Lifecycle hooks
 // ----------------------------------------------------
 // Registra o ouvinte de eventos quando o componente é montado
 onMounted(() => {
     // Adiciona listener de teclado para o documento inteiro
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', async (event) => {
         if (segmentSelected.value) {
             if (event.key === 'ArrowRight') {
                 event.preventDefault();
-                onIncreaseQuantity();
+                await onIncreaseQuantity();
             } else if (event.key === 'ArrowLeft') {
                 event.preventDefault();
-                onDecreaseQuantity();
+                await onDecreaseQuantity();
             }
             //Verifica se a tecla pressionada é a tecla de espaço
             else if (event.key === ' ') {
                 event.preventDefault();
                 // Chama a função de aumentar a quantidade
-                onIncreaseQuantity();
+                await onSpacingIncrease();
             }
             //Verifica se a tecla pressionada é a tecla de espaço
             else if (event.key === 'Backspace') {
                 event.preventDefault();
                 // Chama a função de diminuir a quantidade
-                onDecreaseQuantity();
+                await onSpacingDecrease();
             }
         }
     });

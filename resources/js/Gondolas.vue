@@ -1,13 +1,25 @@
 <template>
     <div class="flex h-full w-full gap-6 overflow-hidden">
         <!-- Barra lateral esquerda com componente Products separado -->
-        <Products :categories="categories" @select-product="handleProductSelect" @drag-start="handleDragStart" @view-stats="showProductStats" />
+        <Products
+            v-if="currentGondola"
+            :categories="categories"
+            :gondola="currentGondola"
+            @select-product="handleProductSelect"
+            @drag-start="handleDragStart"
+            @view-stats="showProductStats"
+        />
 
         <!-- Área central rolável (vertical e horizontal) -->
         <div class="flex h-full w-full flex-col gap-6 overflow-x-auto overflow-y-auto">
             <Tabs v-model="selectedGondolaId" class="w-full" v-if="gondolas.length">
                 <TabsList class="sticky top-0 z-10 flex items-center justify-around bg-white dark:bg-gray-800">
-                    <TabsTrigger v-for="gondola in gondolas" :key="gondola.id" :value="gondola.id" class="w-full truncate text-sm dark:text-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
+                    <TabsTrigger
+                        v-for="gondola in gondolas"
+                        :key="gondola.id"
+                        :value="gondola.id"
+                        class="w-full truncate text-sm dark:text-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white"
+                    >
                         {{ gondola.name }}
                     </TabsTrigger>
                 </TabsList>
@@ -20,7 +32,7 @@
                         @update:invertOrder="updateInvertOrder"
                         @update:category="updateCategory"
                     />
-                    <div class=" flex-col gap-6 overflow-visible border dark:border-gray-700 md:flex-row">
+                    <div class="flex-col gap-6 overflow-visible border dark:border-gray-700 md:flex-row">
                         <!-- Area de trabalho -->
                         <MovableContainer :storage-id="gondola.id" :scale-factor="gondola.scale_factor">
                             <Sections
@@ -62,20 +74,23 @@
         </div>
 
         <!-- Barra lateral direita fixa -->
-        <div class="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-            <div class="border-b border-gray-200 bg-white p-3 dark:bg-gray-800 dark:border-gray-700">
+        <div
+            class="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col overflow-hidden rounded-lg border bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+        >
+            <div class="border-b border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
                 <h3 class="text-center text-lg font-medium text-gray-800 dark:text-gray-100">Propriedades</h3>
             </div>
             <div class="flex-1 p-3">
                 <div v-if="selectedProducts.length" class="rounded-md bg-white p-3 shadow-sm dark:bg-gray-700">
                     <p class="text-gray-800 dark:text-gray-200">{{ selectedProducts.length }} produto(s) selecionado(s)</p>
                     <div v-for="product in selectedProducts" :key="product.id" class="flex items-center gap-2">
-                        <img :src="product.image_url" alt="" class="h-16 w-16 rounded-md object-cover border dark:border-gray-600" />
+                        <img :src="product.image_url" alt="" class="h-16 w-16 rounded-md border object-cover dark:border-gray-600" />
                         <div class="flex flex-col">
                             <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ product.name }}</h4>
                             <p class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ product.sku }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Largura: {{ product.width }}</p>
                         </div>
-                    </div> 
+                    </div>
                 </div>
                 <div v-else class="flex h-full items-center justify-center p-4 text-center text-gray-400 dark:text-gray-500">
                     Selecione um produto para ver suas propriedades
@@ -92,7 +107,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router } from '@inertiajs/vue3';
 import { PlusIcon, ShoppingBagIcon } from 'lucide-vue-next';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Info from './components/gondola/Info.vue';
 import Products from './components/products/Products.vue';
 import Sections from './components/sections/Sections.vue';
@@ -117,10 +132,18 @@ const selectedProducts = ref([]) as any;
 
 // Busca categorias disponíveis
 const categories = ref<any[]>([]);
+// Define the Category interface to match what Section component expects
+interface Category {
+    id: string | number;
+    name: string;
+}
+
 // Categoria selecionada
-const selectedCategory = ref<Record<string, any> | undefined | null>(undefined);
+const selectedCategory = ref<Category | null | undefined>(undefined);
 
 const segments = ref<any[]>([]);
+
+const currentGondola = ref<any>(null);
 // Inicializa o componente
 onMounted(() => {
     initializeSelectedGondola();
@@ -137,12 +160,28 @@ function initializeSelectedGondola() {
     } else if (gondolas.value.length > 0) {
         // Caso contrário, seleciona a primeira gôndola
         selectedGondolaId.value = gondolas.value[0].id;
+
+        // seleciona a primeira gôndola e setar na URL sem mudar a página
+        // Atualiza a URL sem recarregar a página usando Inertia.js
+        // @ts-ignore
+        const currentUrl = route().current();
+        // @ts-ignore
+        const currentParams = route().params;
+
+        // Usando router.visit para atualizar a URL preservando o estado atual
+        // @ts-ignore
+        router.visit(route(currentUrl, { ...currentParams, gondola: gondolas.value[0].id }), {
+            preserveState: true, // Preserva o estado atual da página
+            preserveScroll: true, // Preserva a posição de rolagem
+            only: [], // Não recarrega nenhum componente
+            replace: true, // Substitui a entrada atual no histórico do navegador
+        });
     }
 }
 
 // Manipula a seleção de um segmento
-function handleSegmentSelected(segment: any) { 
-    if(!segment.category) {
+function handleSegmentSelected(segment: any) {
+    if (!segment.category) {
         selectedCategory.value = null;
     }
     if (segment.isMultiSelect) {
@@ -214,6 +253,16 @@ watch(
         }
     },
     { deep: true },
+);
+
+// Observa mudanças na gôndola selecionada
+watch(
+    selectedGondolaId,
+    (newGondolaId) => {
+        // Atualiza a gôndola atual com base na gôndola selecionada
+        currentGondola.value = gondolas.value.find((gondola) => gondola.id === newGondolaId);
+    },
+    { immediate: true },
 );
 
 // Atualiza as seções da gôndola
@@ -290,6 +339,12 @@ async function fetchCategories() {
 onMounted(async () => {
     // Carrega categorias e produtos ao montar o componente
     await fetchCategories();
+    window.addEventListener('click', (event:any) => {
+        // Verifica se o clique foi fora do componente
+         const clearEvent = new CustomEvent('clearSelection');
+        
+        window.dispatchEvent(clearEvent);
+    });
 });
 </script>
 
@@ -328,16 +383,16 @@ onMounted(async () => {
     .overflow-y-auto {
         scrollbar-color: #4b5563 #1f2937;
     }
-    
+
     .overflow-x-auto {
         scrollbar-color: #4b5563 #1f2937;
     }
-    
+
     .overflow-y-auto::-webkit-scrollbar-track,
     .overflow-x-auto::-webkit-scrollbar-track {
         background: #1f2937;
     }
-    
+
     .overflow-y-auto::-webkit-scrollbar-thumb,
     .overflow-x-auto::-webkit-scrollbar-thumb {
         background-color: #4b5563;

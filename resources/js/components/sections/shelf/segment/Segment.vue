@@ -11,7 +11,7 @@
     >
         <!-- Stack counter visible when selected -->
         <div v-if="segmentSelected" class="absolute -top-6 left-0 w-full rounded-t-md bg-blue-600 px-2 py-1 text-xs text-white">
-            Pilhas: {{ segment.quantity }}
+            Produtos: {{ originalQuantity * segment.quantity }} de {{ previewQuantity }}
         </div>
 
         <Layer
@@ -22,6 +22,7 @@
             :layer="segment.layer"
             :scale-factor="scaleFactor"
             :selected="segmentSelected"
+            @update:quantity="updateLayerQuantity"
         />
     </div>
 </template>
@@ -47,7 +48,7 @@ const props = defineProps({
         required: true,
     },
     selectedCategory: {
-        type: Object,
+        type: Object as () => Record<string, any> | null,
         default: null,
     },
     scaleFactor: {
@@ -72,6 +73,11 @@ const segmentId = ref(`segment-${props.segment.id || Math.random().toString(36).
 
 /** Segment quantity (number of layers) */
 const segmentQuantity = ref(props.segment.quantity);
+
+/** Reference to the layer spacing */
+const layerSpacing = ref(props.segment.layer.spacing);
+/** Reference to the original quantity of layers */
+const originalQuantity = ref(props.segment.layer.quantity);
 
 /** Custom event name for inter-segment communication */
 const SEGMENT_SELECTED_EVENT = 'segment-selected';
@@ -140,6 +146,57 @@ const segmentStyle = computed(() => {
     };
 });
 
+const previewQuantity = computed(() => {
+    // Obtém as dimensões relevantes
+    const productWidth = props.segment.layer.product.width;
+    const spacing = layerSpacing.value || 0;
+    const shelfWidth = props.shelf.section.width;
+
+    // Calculamos a largura total disponível na seção
+    let availableWidth = shelfWidth;
+
+    // Se tivermos outros segmentos na prateleira, subtraia o espaço que eles ocupam
+    if (props.shelf.segments && props.shelf.segments.length > 0) {
+        props.shelf.segments.forEach((seg) => {
+            // Pule o segmento atual
+            if (seg.id === props.segment.id) {
+                return;
+            }
+
+            // Para cada outro segmento, calcule o espaço que ele ocupa
+            const segProductWidth = seg.layer.product.width;
+            const segQuantity = seg.layer.quantity;
+            const segSpacing = seg.layer.spacing || 0;
+
+            // Para n produtos, precisamos de (n-1) espaçamentos
+            const totalSegSpacing = segQuantity > 1 ? segSpacing * (segQuantity - 1) : 0;
+
+            // Subtraia a largura deste segmento do espaço disponível
+            availableWidth -= segProductWidth * segQuantity + totalSegSpacing;
+        });
+    }
+
+    // Calculamos quantos produtos cabem no espaço disponível
+    // Fórmula: maxProducts = (availableWidth + spacing) / (productWidth + spacing)
+    let maxQuantity;
+
+    if (spacing > 0) {
+        maxQuantity = Math.floor((availableWidth + spacing) / (productWidth + spacing));
+    } else {
+        maxQuantity = Math.floor(availableWidth / productWidth);
+    }
+
+    // Garanta que o valor não seja negativo
+    return Math.max(0, maxQuantity);
+});
+
+/**
+ * Calculate layer style based on properties
+ */
+const updateLayerQuantity = (quantity: number) => {
+    // Update layer quantity and spacing
+    originalQuantity.value = quantity;
+};
 // ----------------------------------------------------
 // Utility Functions
 // ----------------------------------------------------
