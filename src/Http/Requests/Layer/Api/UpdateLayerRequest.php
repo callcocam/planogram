@@ -8,6 +8,7 @@
 
 namespace Callcocam\Planogram\Http\Requests\Layer\Api;
 
+use Callcocam\Planogram\Rules\ShelfSpacingValidation;
 use Callcocam\Planogram\Rules\ShelfWidthSpaceValidation;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,7 +35,7 @@ class UpdateLayerRequest extends FormRequest
                 'required',
                 'integer',
                 'min:0',
-                new ShelfWidthSpaceValidation($this->route('layer')->id, $this->request->all()),
+                new ShelfSpacingValidation($this->route('layer')->id, $this->request->all()),
             ],
         ];
     }

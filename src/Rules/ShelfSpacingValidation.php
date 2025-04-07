@@ -12,15 +12,17 @@ use Callcocam\Planogram\Models\Layer;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
-class ShelfWidthSpaceValidation implements ValidationRule
+class ShelfSpacingValidation implements ValidationRule
 {
     protected $layerId;
     protected $request;
+
     public function __construct($layerId, $request)
     {
         $this->layerId = $layerId;
         $this->request = $request;
     }
+
     /**
      * Run the validation rule.
      *
@@ -43,15 +45,19 @@ class ShelfWidthSpaceValidation implements ValidationRule
         $segSpacing = 0; // Inicializa o espaçamento do segmento atual
         foreach ($shelf->segments as $seg) {
             $productWidth = $seg->layer->product->width;
-            $quantity = $value;
+            $quantity = $seg->layer->quantity;
             // Define o espaçamento correto (usa o novo valor para o segmento atual)
             $segSpacing =   (float) $seg->layer->spacing;
             // Para n produtos, precisamos de (n-1) espaçamentos entre eles
             // Se quantity for 0 ou 1, não há espaçamento
             $totalSpacing = $quantity > 1 ? $segSpacing * $quantity : 0;
 
+            $totalSpacing += $value * $quantity ;
+
             // A largura total para este segmento é: largura dos produtos + espaçamento total
-            $totalWidth += ($productWidth * $quantity) + $totalSpacing; 
+            $totalWidth += ($productWidth * $quantity);
+
+            $totalWidth += $totalSpacing;
         }
 
 
